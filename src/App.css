@@ -1,0 +1,14 @@
+#root {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  min-height: 100svh;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

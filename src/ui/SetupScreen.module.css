@@ -1,0 +1,139 @@
+.form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  text-align: left;
+  width: min(880px, 100%);
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 1.85rem;
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0 0.5rem;
+}
+
+.hero p {
+  color: var(--muted);
+}
+
+.kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+  background: var(--paper-2);
+}
+
+.card legend {
+  padding: 0 0.35rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.card label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.card input,
+.card select {
+  font: inherit;
+  font-weight: 500;
+  width: 100%;
+  min-width: 0;
+  padding: 0.7rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.check {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 500 !important;
+}
+
+.check input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.seating {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.firstRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.firstOn,
+.firstOff,
+.roll {
+  font: inherit;
+  font-weight: 700;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+}
+
+.firstOn {
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.firstOff,
+.roll {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.order {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.warn {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.submit {
+  font: inherit;
+  font-weight: 700;
+  padding: 1rem;
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  color: white;
+  min-height: 52px;
+}
+
+.submit:disabled {
+  opacity: 0.45;
+}

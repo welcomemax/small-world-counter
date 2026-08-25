@@ -1,0 +1,95 @@
+.page {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  text-align: left;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.top h1 {
+  margin: 0.15rem 0 0;
+  font-size: 1.55rem;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.headerBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.headerBtns button {
+  font: inherit;
+  font-weight: 650;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--paper-2);
+}
+
+.card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.card p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+}
+
+.scores {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.scores li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+}
+
+.chart {
+  width: 100%;
+  min-height: 260px;
+}
+
+.note {
+  font-size: 0.9rem;
+}
+
+.timeline {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.timeline ul {
+  margin: 0.35rem 0 0.8rem;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
