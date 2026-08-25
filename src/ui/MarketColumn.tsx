@@ -17,6 +17,10 @@ type Props = {
   idPrefix?: string
   /** Combos in play or in decline; they are gone from the stacks for good. */
   usedCombos?: Combo[]
+  onRandomize?: (index: number) => void
+  randomizedIndex?: number | null
+  randomizeEmptyOnly?: boolean
+  showCaption?: boolean
 }
 
 export function MarketColumn({
@@ -29,6 +33,10 @@ export function MarketColumn({
   onToggleEdit,
   idPrefix = 'market',
   usedCombos = [],
+  onRandomize,
+  randomizedIndex,
+  randomizeEmptyOnly = false,
+  showCaption = true,
 }: Props) {
   const takenExcept = (index: number) =>
     takenIds([
@@ -40,13 +48,16 @@ export function MarketColumn({
 
   return (
     <div className={styles.column}>
-      <p className={styles.caption}>
-        Шесть связок как на столе. Верхняя бесплатна, за каждую выше выбранной
-        кладёте монету, а монеты с выбранной забираете.
-      </p>
+      {showCaption && (
+        <p className={styles.caption}>
+          Шесть связок как на столе. Верхняя бесплатна, за каждую выше выбранной
+          кладёте монету, а монеты с выбранной забираете.
+        </p>
+      )}
       {market.slots.map((slot, index) => {
         const editing = editingIndex === index
-        const taken = editing ? takenExcept(index) : null
+        const available = takenExcept(index)
+        const taken = editing ? available : null
         const draft = slot.combo ?? (taken ? firstFreeCombo(taken) : null)
         const label = slot.combo
           ? formatCombo(slot.combo.race, slot.combo.power)
@@ -54,7 +65,12 @@ export function MarketColumn({
         return (
           <div
             key={index}
-            className={index === selectedIndex ? styles.selected : styles.slot}
+            className={[
+              index === selectedIndex ? styles.selected : styles.slot,
+              index === randomizedIndex ? styles.dealt : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
           >
             <div className={styles.head}>
               <button
@@ -71,16 +87,37 @@ export function MarketColumn({
                   {label}
                 </span>
               </button>
-              {onToggleEdit && (
-                <button
-                  type="button"
-                  className={styles.edit}
-                  onClick={() => onToggleEdit(editing ? null : index)}
-                  aria-label={editing ? 'Закрыть правку' : 'Править связку'}
-                >
-                  {editing ? '×' : '✎'}
-                </button>
-              )}
+              <span className={styles.actions}>
+                {onRandomize && (!randomizeEmptyOnly || !slot.combo) && (
+                  <button
+                    type="button"
+                    className={styles.random}
+                    disabled={!firstFreeCombo(available)}
+                    onClick={() => onRandomize(index)}
+                    aria-label={`Случайная связка для строки ${index + 1}`}
+                    title="Подобрать случайную свободную связку"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Z" />
+                      <circle cx="8" cy="8" r="1.35" />
+                      <circle cx="16" cy="8" r="1.35" />
+                      <circle cx="12" cy="12" r="1.35" />
+                      <circle cx="8" cy="16" r="1.35" />
+                      <circle cx="16" cy="16" r="1.35" />
+                    </svg>
+                  </button>
+                )}
+                {onToggleEdit && (
+                  <button
+                    type="button"
+                    className={styles.edit}
+                    onClick={() => onToggleEdit(editing ? null : index)}
+                    aria-label={editing ? 'Закрыть правку' : 'Править связку'}
+                  >
+                    {editing ? '×' : '✎'}
+                  </button>
+                )}
+              </span>
             </div>
             {editing && onEditCombo && taken && (
               <div className={styles.editor}>

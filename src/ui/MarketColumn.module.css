@@ -53,14 +53,78 @@
   opacity: 1;
 }
 
-.edit {
+.pick:hover:not(:disabled) {
+  background: var(--warn-bg);
+  color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.edit,
+.random {
   font: inherit;
   border: 1px solid var(--line);
   background: var(--paper-2);
   color: var(--ink);
   border-radius: 9px;
   width: 2.4rem;
+  min-height: 44px;
   line-height: 1;
+}
+
+.random {
+  display: grid;
+  place-items: center;
+}
+
+.random svg {
+  width: 1.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+}
+
+.random circle {
+  fill: currentColor;
+  stroke: none;
+}
+
+.edit:hover:not(:disabled),
+.random:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--warn-bg);
+  color: var(--accent);
+}
+
+.edit:focus-visible,
+.random:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.dealt {
+  animation: deal 520ms cubic-bezier(0.18, 0.9, 0.25, 1);
+}
+
+@keyframes deal {
+  0% {
+    opacity: 0.35;
+    transform: translateY(-12px) rotate(-1deg);
+  }
+
+  55% {
+    box-shadow: 0 0 0 3px var(--warn-bg);
+    transform: translateY(2px) rotate(0);
+  }
+
+  100% {
+    opacity: 1;
+    box-shadow: none;
+    transform: translateY(0);
+  }
 }
 
 .meta {
@@ -113,4 +177,10 @@
   border: 1px solid var(--line);
   background: var(--paper);
   color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dealt {
+    animation: none;
+  }
 }

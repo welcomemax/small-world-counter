@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { useGame } from './state/GameContext'
 import { LiveScreen } from './ui/LiveScreen'
 import { SetupScreen } from './ui/SetupScreen'
+import { TurnTransition } from './ui/TurnTransition'
 import './App.css'
 
 const AnalyticsScreen = lazy(async () => {
@@ -9,8 +10,7 @@ const AnalyticsScreen = lazy(async () => {
   return { default: mod.AnalyticsScreen }
 })
 
-export default function App() {
-  const { screen } = useGame()
+function Screen({ screen }: { screen: ReturnType<typeof useGame>['screen'] }) {
   if (screen === 'live') return <LiveScreen />
   if (screen === 'analytics') {
     return (
@@ -20,4 +20,14 @@ export default function App() {
     )
   }
   return <SetupScreen />
+}
+
+export default function App() {
+  const { screen, handover, dismissHandover } = useGame()
+  return (
+    <>
+      {handover && <TurnTransition {...handover} onDone={dismissHandover} />}
+      <Screen screen={screen} />
+    </>
+  )
 }

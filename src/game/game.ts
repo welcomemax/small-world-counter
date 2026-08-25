@@ -9,6 +9,7 @@ import {
 } from './market'
 import {
   STARTING_COINS,
+  type Actor,
   type Combo,
   type ComboCoins,
   type CreateGameInput,
@@ -119,7 +120,7 @@ export function hydrateGame(stored: unknown): Game | null {
   })
 }
 
-export function currentActor(game: Game): { playerId: string; round: number } {
+export function currentActor(game: Game): Actor {
   const n = game.setup.length
   const i = game.history.length
   return {

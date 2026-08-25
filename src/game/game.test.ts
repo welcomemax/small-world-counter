@@ -94,6 +94,17 @@ describe('createGame', () => {
   })
 })
 
+describe('turn order', () => {
+  test('walks the table clockwise and ends after the last round', () => {
+    let game = openingPicks(twoPlayerGame())
+    expect(currentActor(game)).toEqual({ playerId: 'p0', round: 2 })
+    game = applyTurn(game, { action: 'expand', score: { total: 0 } })
+    expect(currentActor(game)).toEqual({ playerId: 'p1', round: 2 })
+    game = applyTurn(game, { action: 'expand', score: { total: 0 } })
+    expect(isComplete(game)).toBe(true)
+  })
+})
+
 describe('editMarketCombo and editMarketCoins', () => {
   test('corrects the column to match the table without touching the score', () => {
     let game = twoPlayerGame()

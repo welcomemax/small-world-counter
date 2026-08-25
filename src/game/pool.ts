@@ -44,3 +44,33 @@ export function firstFreeCombo(taken: TakenIds): Combo | null {
   const power = POWER_IDS.find((id) => !taken.powers.has(id))
   return race && power ? { race, power } : null
 }
+
+export function randomIndex(length: number, rng: () => number = Math.random): number {
+  if (length <= 0) return -1
+  return Math.min(length - 1, Math.max(0, Math.floor(rng() * length)))
+}
+
+export function randomFreeCombo(
+  taken: TakenIds,
+  rng: () => number = Math.random,
+): Combo | null {
+  const races = RACE_IDS.filter((id) => !taken.races.has(id))
+  const powers = POWER_IDS.filter((id) => !taken.powers.has(id))
+  const raceIndex = randomIndex(races.length, rng)
+  const powerIndex = randomIndex(powers.length, rng)
+  if (raceIndex < 0 || powerIndex < 0) return null
+  return { race: races[raceIndex]!, power: powers[powerIndex]! }
+}
+
+export function randomReplacementCombo(
+  market: ComboMarket,
+  usedCombos: Combo[],
+  index: number,
+  rng: () => number = Math.random,
+): Combo | null {
+  if (index < 0 || index >= market.slots.length) return null
+  const otherRows = market.slots.flatMap((slot, slotIndex) =>
+    slot.combo && slotIndex !== index ? [slot.combo] : [],
+  )
+  return randomFreeCombo(takenIds([...otherRows, ...usedCombos]), rng)
+}

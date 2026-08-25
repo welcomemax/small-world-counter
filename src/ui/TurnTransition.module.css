@@ -1,0 +1,138 @@
+.overlay {
+  --dur: 1400ms;
+
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      color-mix(in srgb, var(--accent) 45%, transparent),
+      transparent 62%
+    ),
+    #17100a;
+  animation: veil var(--dur) ease-in-out forwards;
+}
+
+.sweep {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -70%;
+  width: 55%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(251, 244, 230, 0.14) 42%,
+    rgba(251, 244, 230, 0.3) 55%,
+    transparent
+  );
+  animation: sweep var(--dur) cubic-bezier(0.45, 0, 0.15, 1) forwards;
+}
+
+.panel {
+  position: relative;
+  padding: 1.5rem;
+  text-align: center;
+  animation: rise var(--dur) cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f0c0a8;
+}
+
+.name {
+  margin: 0.4rem 0 0.6rem;
+  font-size: clamp(2.4rem, 9vw, 4.6rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #fbf4e6;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(251, 244, 230, 0.62);
+}
+
+@keyframes veil {
+  from {
+    opacity: 0;
+  }
+  14%,
+  72% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(0) skewX(-12deg);
+  }
+  to {
+    transform: translateX(340%) skewX(-12deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+  20%,
+  68% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.99);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  18%,
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    --dur: 1000ms;
+  }
+
+  .sweep {
+    display: none;
+  }
+
+  .panel {
+    animation-name: fade;
+    animation-timing-function: linear;
+  }
+}

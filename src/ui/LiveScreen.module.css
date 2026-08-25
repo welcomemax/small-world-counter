@@ -156,14 +156,6 @@
   margin-bottom: 0.7rem;
 }
 
-.check {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
-}
-
 .error {
   color: #b42318;
   margin: 0;

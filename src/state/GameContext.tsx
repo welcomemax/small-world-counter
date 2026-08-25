@@ -16,6 +16,7 @@ import {
   setScoreHidden,
   undo,
 } from '../game'
+import { handoverAfterTurn, openingHandover, type Handover } from '../game/handover'
 import { clearSavedGame, loadGame, saveGame } from '../game/storage'
 import type { Combo, CreateGameInput, Game, TurnInput } from '../game/types'
 
@@ -24,6 +25,7 @@ export type Screen = 'setup' | 'live' | 'analytics'
 export type GameContextValue = {
   game: Game | null
   screen: Screen
+  handover: Handover | null
   startGame: (input: CreateGameInput) => void
   recordTurn: (input: TurnInput) => void
   undoTurn: () => void
@@ -33,6 +35,7 @@ export type GameContextValue = {
   goAnalytics: () => void
   goLive: () => void
   newGame: () => void
+  dismissHandover: () => void
 }
 
 export const GameContext = createContext<GameContextValue | null>(null)
@@ -40,6 +43,7 @@ export const GameContext = createContext<GameContextValue | null>(null)
 export function GameProvider({ children }: { children: ReactNode }) {
   const [game, setGame] = useState<Game | null>(() => loadGame())
   const [prefer, setPrefer] = useState<'live' | 'analytics'>('live')
+  const [handover, setHandover] = useState<Handover | null>(null)
 
   const screen: Screen = !game
     ? 'setup'
@@ -52,14 +56,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, [game])
 
   const startGame = useCallback((input: CreateGameInput) => {
-    setGame(createGame(input))
+    const created = createGame(input)
+    setGame(created)
     setPrefer('live')
+    setHandover(openingHandover(created))
   }, [])
 
   const recordTurn = useCallback(
     (input: TurnInput) => {
       if (!game) throw new Error('Нет партии')
-      setGame(applyTurn(game, input))
+      const next = applyTurn(game, input)
+      setGame(next)
+      setHandover(handoverAfterTurn(next))
     },
     [game],
   )
@@ -67,6 +75,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const undoTurn = useCallback(() => {
     setGame((current) => (current ? undo(current) : current))
     setPrefer('live')
+    setHandover(null)
   }, [])
 
   const setMarketCombo = useCallback((index: number, combo: Combo) => {
@@ -88,12 +97,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
     clearSavedGame()
     setGame(null)
     setPrefer('live')
+    setHandover(null)
   }, [])
+
+  const dismissHandover = useCallback(() => setHandover(null), [])
 
   const value = useMemo(
     () => ({
       game,
       screen,
+      handover,
       startGame,
       recordTurn,
       undoTurn,
@@ -103,10 +116,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       goAnalytics,
       goLive,
       newGame,
+      dismissHandover,
     }),
     [
       game,
       screen,
+      handover,
       startGame,
       recordTurn,
       undoTurn,
@@ -116,6 +131,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       goAnalytics,
       goLive,
       newGame,
+      dismissHandover,
     ],
   )
 

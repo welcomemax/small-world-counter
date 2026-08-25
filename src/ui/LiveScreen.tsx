@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatCombo } from '../game/catalog'
 import { currentActor, isComplete, playerTotal } from '../game/game'
 import { isMarketReady } from '../game/market'
-import { pickedCombos } from '../game/pool'
+import { pickedCombos, randomReplacementCombo } from '../game/pool'
 import type { TurnAction, TurnScore } from '../game/types'
 import { useGame } from '../state/GameContext'
+import { ConfirmDialog } from './ConfirmDialog'
 import { MarketColumn } from './MarketColumn'
 import { parseNonNeg } from './parseNumber'
+import { ToggleSwitch } from './ToggleSwitch'
 import styles from './LiveScreen.module.css'
 
 const emptyScore: TurnScore = { total: 0 }
@@ -27,6 +29,9 @@ export function LiveScreen() {
   const [marketIndex, setMarketIndex] = useState(0)
   const [editingSlot, setEditingSlot] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [confirmingNewGame, setConfirmingNewGame] = useState(false)
+  const [randomizedIndex, setRandomizedIndex] = useState<number | null>(null)
+  const randomizedTimer = useRef<number | null>(null)
 
   const actor = game ? currentActor(game) : null
   const player =
@@ -38,6 +43,15 @@ export function LiveScreen() {
     [game, player],
   )
   const usedCombos = useMemo(() => (game ? pickedCombos(game) : []), [game])
+
+  useEffect(
+    () => () => {
+      if (randomizedTimer.current !== null) {
+        window.clearTimeout(randomizedTimer.current)
+      }
+    },
+    [],
+  )
 
   if (!game || !actor || !player) return null
 
@@ -58,8 +72,34 @@ export function LiveScreen() {
     }
   }
 
+  const randomizeDraft = (index: number) => {
+    const combo = randomReplacementCombo(game.market, usedCombos, index)
+    if (!combo) return
+    setMarketCombo(index, combo)
+    setRandomizedIndex(null)
+    if (randomizedTimer.current !== null) {
+      window.clearTimeout(randomizedTimer.current)
+    }
+    randomizedTimer.current = window.setTimeout(() => {
+      setRandomizedIndex(index)
+      randomizedTimer.current = null
+    }, 0)
+  }
+
   return (
     <div className={styles.layout}>
+      <ConfirmDialog
+        open={confirmingNewGame}
+        title="Начать новую партию?"
+        description="Текущий прогресс будет удалён без возможности восстановления."
+        cancelLabel="Продолжить игру"
+        confirmLabel="Начать заново"
+        onCancel={() => setConfirmingNewGame(false)}
+        onConfirm={() => {
+          setConfirmingNewGame(false)
+          newGame()
+        }}
+      />
       <main className={styles.main}>
         <header className={styles.top}>
           <div>
@@ -68,7 +108,11 @@ export function LiveScreen() {
             </p>
             <h1>{player.name}</h1>
           </div>
-          <button type="button" className={styles.ghost} onClick={newGame}>
+          <button
+            type="button"
+            className={styles.ghost}
+            onClick={() => setConfirmingNewGame(true)}
+          >
             Новая партия
           </button>
         </header>
@@ -209,7 +253,7 @@ export function LiveScreen() {
 
       <aside className={styles.sidebar}>
         <section className={styles.panel}>
-          <h2>Колонка комбо</h2>
+          <h2>Драфт</h2>
           <MarketColumn
             market={game.market}
             selectedIndex={activeAction === 'select' ? marketIndex : undefined}
@@ -219,6 +263,9 @@ export function LiveScreen() {
             editingIndex={editingSlot}
             onToggleEdit={setEditingSlot}
             usedCombos={usedCombos}
+            onRandomize={randomizeDraft}
+            randomizedIndex={randomizedIndex}
+            randomizeEmptyOnly
           />
           {!isMarketReady(game.market) && (
             <p className={styles.warn}>
@@ -264,14 +311,12 @@ export function LiveScreen() {
               </button>
             )}
           </div>
-          <label className={styles.check}>
-            <input
-              type="checkbox"
-              checked={game.scoreHidden}
-              onChange={(e) => toggleHidden(e.target.checked)}
-            />
-            Скрытый счёт
-          </label>
+          <ToggleSwitch
+            checked={game.scoreHidden}
+            label="Скрытый счёт"
+            description="Не показывать итоги до конца партии"
+            onChange={toggleHidden}
+          />
           <p className={styles.muted}>Записано ходов: {game.history.length}</p>
         </section>
       </aside>

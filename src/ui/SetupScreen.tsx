@@ -1,10 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defaultTurnCount } from '../game/game'
-import { emptyMarket, isMarketReady, setSlotCombo } from '../game/market'
+import { emptyMarket, setSlotCombo } from '../game/market'
+import { randomFreeCombo, randomIndex, takenIds } from '../game/pool'
+import {
+  loadRecentNames,
+  nameSuggestions,
+  saveRecentNames,
+} from '../game/recentNames'
 import type { Combo } from '../game/types'
 import { useGame } from '../state/GameContext'
+import { DiscreteSlider } from './DiscreteSlider'
 import { MarketColumn } from './MarketColumn'
-import { parseNonNeg } from './parseNumber'
+import { PlayerSetupCard } from './PlayerSetupCard'
+import { setupIssue } from './setupModel'
+import { ToggleSwitch } from './ToggleSwitch'
 import styles from './SetupScreen.module.css'
 
 type Draft = { name: string }
@@ -24,44 +33,124 @@ export function SetupScreen() {
     emptyDraft(),
   ])
   const [market, setMarket] = useState(() => emptyMarket())
-  const [editingSlot, setEditingSlot] = useState<number | null>(0)
+  const [editingSlot, setEditingSlot] = useState<number | null>(null)
+  const [randomizedIndex, setRandomizedIndex] = useState<number | null>(null)
+  const [recentNames] = useState(loadRecentNames)
+  const [rollingIndex, setRollingIndex] = useState<number | null>(null)
+  const [winnerPulse, setWinnerPulse] = useState<number | null>(null)
+  const [isRolling, setIsRolling] = useState(false)
+  const timers = useRef<number[]>([])
 
-  const setPlayerCount = (n: number) => {
-    setCount(n)
-    setTurnCount(defaultTurnCount(n))
-    setFirstPlayerIndex((current) => (current >= n ? 0 : current))
+  const clearTimers = useCallback(() => {
+    for (const timer of timers.current) window.clearTimeout(timer)
+    timers.current = []
+  }, [])
+
+  useEffect(() => clearTimers, [clearTimers])
+
+  const setPlayerCount = (nextCount: number) => {
+    setCount(nextCount)
+    setTurnCount(defaultTurnCount(nextCount))
+    setFirstPlayerIndex((current) => (current >= nextCount ? 0 : current))
     setPlayers((current) => {
-      const next = current.slice(0, n)
-      while (next.length < n) next.push(emptyDraft())
+      const next = current.slice(0, nextCount)
+      while (next.length < nextCount) next.push(emptyDraft())
       return next
     })
   }
 
-  const namesReady = useMemo(
-    () => players.every((p) => p.name.trim().length > 0),
-    [players],
-  )
-  const columnReady = isMarketReady(market)
-  const ready = namesReady && columnReady
-
-  const turnOrder = useMemo(
-    () =>
-      players.map((_, i) => players[(firstPlayerIndex + i) % players.length]!),
-    [players, firstPlayerIndex],
-  )
+  const playerNames = players.map((player) => player.name)
+  const issue = setupIssue(playerNames, market)
+  const ready = issue === null
+  const highlightedPlayer = rollingIndex ?? firstPlayerIndex
 
   const editCombo = (index: number, combo: Combo) => {
     setMarket((current) => setSlotCombo(current, index, combo))
   }
 
+  const randomizeCombo = (index: number) => {
+    setMarket((current) => {
+      const used = current.slots.flatMap((slot, slotIndex) =>
+        slot.combo && slotIndex !== index ? [slot.combo] : [],
+      )
+      const combo = randomFreeCombo(takenIds(used))
+      return combo ? setSlotCombo(current, index, combo) : current
+    })
+    setRandomizedIndex(null)
+    timers.current.push(
+      window.setTimeout(() => setRandomizedIndex(index), 0),
+    )
+  }
+
+  const chooseFirst = (index: number) => {
+    if (isRolling) return
+    setFirstPlayerIndex(index)
+    setWinnerPulse(index)
+    timers.current.push(
+      window.setTimeout(() => setWinnerPulse(null), 900),
+    )
+  }
+
+  const rollFirst = () => {
+    if (isRolling) return
+    clearTimers()
+    const winner = randomIndex(players.length)
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    setWinnerPulse(null)
+
+    if (reduceMotion) {
+      setFirstPlayerIndex(winner)
+      setWinnerPulse(winner)
+      return
+    }
+
+    setIsRolling(true)
+    let elapsed = 0
+    const distance =
+      (winner - firstPlayerIndex + players.length) % players.length
+    const steps = players.length * 3 + distance
+
+    for (let step = 1; step <= steps; step += 1) {
+      const delay = 65 + Math.round((step / steps) ** 2 * 150)
+      elapsed += delay
+      timers.current.push(
+        window.setTimeout(() => {
+          const active = (firstPlayerIndex + step) % players.length
+          setRollingIndex(active)
+          if (step === steps) {
+            setFirstPlayerIndex(winner)
+            setRollingIndex(null)
+            setIsRolling(false)
+            setWinnerPulse(winner)
+            timers.current.push(
+              window.setTimeout(() => setWinnerPulse(null), 1000),
+            )
+          }
+        }, elapsed),
+      )
+    }
+  }
+
+  const filledCombos = market.slots.filter((slot) => slot.combo).length
+  const readyNames = players.filter((player) => player.name.trim()).length
+  const playerSuggestions = useMemo(
+    () =>
+      players.map((_, index) =>
+        nameSuggestions(recentNames, playerNames, index),
+      ),
+    [players, recentNames, playerNames],
+  )
+
   return (
     <form
       className={styles.form}
-      onSubmit={(e) => {
-        e.preventDefault()
-        if (!ready) return
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (!ready || isRolling) return
+        const names = players.map((player) => player.name.trim())
+        saveRecentNames(names)
         startGame({
-          players: players.map((p) => ({ name: p.name.trim() })),
+          players: names.map((name) => ({ name })),
           turnCount,
           scoreHidden,
           firstPlayerIndex,
@@ -70,133 +159,120 @@ export function SetupScreen() {
       }}
     >
       <header className={styles.hero}>
-        <p className={styles.kicker}>Days of Wonder · базовая коробка</p>
-        <h1>Счётчик Small World</h1>
-        <p>
-          Состав, первый игрок и колонка комбо со стола. Расу берут уже в свой
-          первый ход.
-        </p>
+        <div>
+          <p className={styles.kicker}>Small World · счётчик партии</p>
+          <h1>Соберите игроков.<br />Остальное посчитаем.</h1>
+          <p className={styles.lead}>
+            Настройте стол за минуту — затем передавайте счётчик по кругу.
+          </p>
+        </div>
+        <div className={styles.heroMark} aria-hidden="true">
+          <span>SW</span>
+          <small>живой счёт</small>
+        </div>
       </header>
 
-      <fieldset className={styles.card}>
-        <legend>Партия</legend>
-        <label>
-          Игроков
-          <select
-            value={count}
-            onChange={(e) => setPlayerCount(parseNonNeg(e.target.value))}
-          >
-            {[2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Ходов (по карте)
-          <input
-            type="number"
-            min={1}
-            max={10}
-            value={turnCount}
-            onChange={(e) => setTurnCount(Math.max(1, parseNonNeg(e.target.value)))}
-          />
-        </label>
-        <label className={styles.check}>
-          <input
-            type="checkbox"
-            checked={scoreHidden}
-            onChange={(e) => setScoreHidden(e.target.checked)}
-          />
-          Скрывать итоги до конца (как в правилах)
-        </label>
-      </fieldset>
+      <div className={styles.workspace}>
+        <div className={styles.left}>
+          <section className={styles.card}>
+            <header className={styles.sectionHead}>
+              <div>
+                <p className={styles.step}>01</p>
+                <h2>Партия</h2>
+              </div>
+              <span className={styles.official}>по правилам базы</span>
+            </header>
+            <div className={styles.sliders}>
+              <DiscreteSlider
+                id="player-count"
+                label="Игроков"
+                value={count}
+                min={2}
+                max={5}
+                marks={[2, 3, 4, 5]}
+                disabled={isRolling}
+                onChange={setPlayerCount}
+              />
+              <DiscreteSlider
+                id="turn-count"
+                label="Ходов"
+                value={turnCount}
+                min={8}
+                max={10}
+                marks={[8, 9, 10]}
+                disabled={isRolling}
+                onChange={setTurnCount}
+              />
+            </div>
+            <div className={styles.switchRow}>
+              <ToggleSwitch
+                checked={scoreHidden}
+                label="Скрытый счёт"
+                description="Не показывать итоги до конца партии"
+                disabled={isRolling}
+                onChange={setScoreHidden}
+              />
+            </div>
+          </section>
 
-      <fieldset className={styles.card}>
-        <legend>Кто играет</legend>
-        {players.map((player, index) => (
-          <label key={index}>
-            Игрок {index + 1}
-            <input
-              required
-              value={player.name}
-              onChange={(e) =>
-                setPlayers((current) =>
-                  current.map((p, i) =>
-                    i === index ? { name: e.target.value } : p,
-                  ),
-                )
-              }
-              placeholder={`Имя ${index + 1}`}
-            />
-          </label>
-        ))}
-        <p className={styles.seating}>
-          Порядок вокруг стола — как в списке, по часовой стрелке.
-        </p>
-      </fieldset>
-
-      <fieldset className={styles.card}>
-        <legend>Кто ходит первым</legend>
-        <p className={styles.seating}>
-          В правилах — у кого острее уши. Здесь можно бросить жребий или указать
-          вручную.
-        </p>
-        <div className={styles.firstRow}>
-          {players.map((player, index) => (
-            <button
-              key={index}
-              type="button"
-              className={
-                index === firstPlayerIndex ? styles.firstOn : styles.firstOff
-              }
-              onClick={() => setFirstPlayerIndex(index)}
-            >
-              {player.name.trim() || `Игрок ${index + 1}`}
-            </button>
-          ))}
+          <PlayerSetupCard
+            players={players}
+            suggestions={playerSuggestions}
+            firstPlayerIndex={firstPlayerIndex}
+            highlightedPlayer={highlightedPlayer}
+            winnerPulse={winnerPulse}
+            isRolling={isRolling}
+            onRoll={rollFirst}
+            onChooseFirst={chooseFirst}
+            onNameChange={(index, name) =>
+              setPlayers((current) =>
+                current.map((draft, draftIndex) =>
+                  draftIndex === index ? { name } : draft,
+                ),
+              )
+            }
+          />
         </div>
-        <button
-          type="button"
-          className={styles.roll}
-          onClick={() =>
-            setFirstPlayerIndex(Math.floor(Math.random() * players.length))
-          }
-        >
-          Случайный первый игрок
-        </button>
-        {namesReady && (
-          <ol className={styles.order}>
-            {turnOrder.map((p, i) => (
-              <li key={`${p.name}-${i}`}>
-                {i === 0 ? '1-й ход: ' : 'далее: '}
-                {p.name.trim()}
-              </li>
-            ))}
-          </ol>
-        )}
-      </fieldset>
 
-      <fieldset className={styles.card}>
-        <legend>Колонка комбо со стола</legend>
-        <MarketColumn
-          market={market}
-          idPrefix="setup-market"
-          onEditCombo={editCombo}
-          editingIndex={editingSlot}
-          onToggleEdit={setEditingSlot}
-        />
-        {!columnReady && (
-          <p className={styles.warn}>
-            Впишите все шесть связок — они должны совпадать со столом.
+        <section className={`${styles.card} ${styles.marketCard}`}>
+          <header className={styles.sectionHead}>
+            <div>
+              <p className={styles.step}>03</p>
+              <h2>Драфт</h2>
+            </div>
+            <span className={styles.counter}>{filledCombos} / 6</span>
+          </header>
+          <p className={styles.intro}>
+            Перенесите связки со стола или бросайте кубик у каждой строки и
+            выкладывайте выпавшие жетоны.
           </p>
-        )}
-      </fieldset>
+          <MarketColumn
+            market={market}
+            idPrefix="setup-market"
+            onEditCombo={editCombo}
+            onRandomize={randomizeCombo}
+            randomizedIndex={randomizedIndex}
+            editingIndex={editingSlot}
+            onToggleEdit={setEditingSlot}
+            showCaption={false}
+          />
+        </section>
+      </div>
 
-      <button className={styles.submit} type="submit" disabled={!ready}>
-        К первому ходу
-      </button>
+      <footer className={styles.launch}>
+        <div className={ready ? styles.ready : styles.notReady}>
+          <span aria-hidden="true">{ready ? '✓' : '·'}</span>
+          <p>
+            <strong>{ready ? 'Всё готово' : issue}</strong>
+            <small>
+              {readyNames} из {count} игроков · {filledCombos} из 6 связок
+            </small>
+          </p>
+        </div>
+        <button type="submit" disabled={!ready || isRolling}>
+          Играть <span aria-hidden="true">→</span>
+        </button>
+      </footer>
     </form>
   )
 }
