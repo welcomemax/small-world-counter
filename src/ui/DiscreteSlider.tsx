@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { parseNonNeg } from './parseNumber'
 import styles from './DiscreteSlider.module.css'
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
   marks: number[]
   onChange: (value: number) => void
   disabled?: boolean
+  valueInputLabel?: string
 }
 
 export function DiscreteSlider({
@@ -21,21 +23,40 @@ export function DiscreteSlider({
   marks,
   onChange,
   disabled = false,
+  valueInputLabel,
 }: Props) {
-  const progress = max === min ? 0 : ((value - min) / (max - min)) * 100
+  const effectiveMax = Math.max(max, value)
+  const progress =
+    effectiveMax === min ? 0 : ((value - min) / (effectiveMax - min)) * 100
   const sliderStyle = { '--progress': `${progress}%` } as CSSProperties
 
   return (
-    <label className={styles.control} htmlFor={id}>
+    <div className={styles.control}>
       <span className={styles.heading}>
-        <span>{label}</span>
-        <strong>{value}</strong>
+        <label htmlFor={id}>{label}</label>
+        {valueInputLabel ? (
+          <input
+            className={styles.exact}
+            type="number"
+            min={min}
+            step={1}
+            value={value}
+            disabled={disabled}
+            aria-label={valueInputLabel}
+            onChange={(event) =>
+              onChange(Math.floor(parseNonNeg(event.target.value)))
+            }
+          />
+        ) : (
+          <strong>{value}</strong>
+        )}
       </span>
       <input
         id={id}
+        className={styles.range}
         type="range"
         min={min}
-        max={max}
+        max={effectiveMax}
         step={1}
         value={value}
         disabled={disabled}
@@ -47,6 +68,6 @@ export function DiscreteSlider({
           <span key={mark}>{mark}</span>
         ))}
       </span>
-    </label>
+    </div>
   )
 }

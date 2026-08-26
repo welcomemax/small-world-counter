@@ -1,7 +1,7 @@
 .layout {
   display: grid;
   gap: 1rem;
-  padding: 1.25rem;
+  padding: var(--page-pad);
   text-align: left;
   grid-template-columns: 1fr;
 }
@@ -11,7 +11,6 @@
     grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
     align-items: start;
     gap: 1.5rem;
-    padding: 1.5rem;
   }
 }
 
@@ -35,6 +34,13 @@
   align-items: flex-start;
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 .top h1 {
   margin: 0.15rem 0 0;
   font-size: 1.7rem;
@@ -50,7 +56,6 @@
 }
 
 .status,
-.card,
 .panel {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -83,69 +88,13 @@
   gap: 0.6rem;
 }
 
-.on,
-.off,
-.submit,
-.toolbar button,
-.ghost {
-  font: inherit;
-  font-weight: 700;
-  border-radius: 12px;
-  min-height: 48px;
-  padding: 0.7rem 0.9rem;
-}
-
-.on {
-  border: 2px solid var(--accent);
-  background: var(--accent);
-  color: white;
-}
-
-.off,
-.toolbar button,
-.ghost {
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-}
-
 .submit {
-  border: 0;
-  background: var(--accent);
-  color: white;
   min-height: 52px;
 }
 
-.card h2,
 .panel h2 {
   margin: 0 0 0.75rem;
   font-size: 1.05rem;
-}
-
-.card label {
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.65rem;
-}
-
-.card input {
-  font: inherit;
-  font-weight: 500;
-  width: 100%;
-  min-width: 0;
-  padding: 0.7rem 0.75rem;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
-  gap: 0.6rem;
 }
 
 .toolbar {

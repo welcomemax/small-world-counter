@@ -1,0 +1,22 @@
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding: 0.9rem var(--page-pad) 6.5rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.footer p {
+  margin: 0;
+  max-width: 52rem;
+}
+
+.footer a {
+  color: var(--accent);
+  font-weight: 650;
+}

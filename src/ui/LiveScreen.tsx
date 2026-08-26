@@ -3,15 +3,23 @@ import { formatCombo } from '../game/catalog'
 import { currentActor, isComplete, playerTotal } from '../game/game'
 import { isMarketReady } from '../game/market'
 import { pickedCombos, randomReplacementCombo } from '../game/pool'
-import type { TurnAction, TurnScore } from '../game/types'
+import { toTurnScore, type ScoreBreakdown } from '../game/score'
+import { scoringRemindersForTurn } from '../game/scoringReminders'
+import type { TurnAction } from '../game/types'
 import { useGame } from '../state/GameContext'
 import { ConfirmDialog } from './ConfirmDialog'
+import { Button } from './Button'
 import { MarketColumn } from './MarketColumn'
-import { parseNonNeg } from './parseNumber'
+import { ReinforcementDie } from './ReinforcementDie'
 import { ToggleSwitch } from './ToggleSwitch'
+import { TurnScoreInput } from './TurnScoreInput'
 import styles from './LiveScreen.module.css'
 
-const emptyScore: TurnScore = { total: 0 }
+const emptyScore: ScoreBreakdown = {
+  activeRegions: 0,
+  declineRegions: 0,
+  bonus: 0,
+}
 
 export function LiveScreen() {
   const {
@@ -25,7 +33,7 @@ export function LiveScreen() {
     newGame,
   } = useGame()
   const [action, setAction] = useState<TurnAction>('expand')
-  const [score, setScore] = useState<TurnScore>(emptyScore)
+  const [score, setScore] = useState<ScoreBreakdown>(emptyScore)
   const [marketIndex, setMarketIndex] = useState(0)
   const [editingSlot, setEditingSlot] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,12 +63,22 @@ export function LiveScreen() {
 
   if (!game || !actor || !player) return null
 
+  const scoringCombo =
+    activeAction === 'select'
+      ? game.market.slots[marketIndex]?.combo ?? null
+      : player.activeCombo
+  const scoreReminders = scoringRemindersForTurn({
+    action: activeAction,
+    activeCombo: scoringCombo,
+    declined: player.declined,
+  })
+
   const submit = () => {
     setError(null)
     try {
       recordTurn({
         action: activeAction,
-        score,
+        score: toTurnScore(score),
         marketIndex: activeAction === 'select' ? marketIndex : undefined,
       })
       setScore(emptyScore)
@@ -108,13 +126,15 @@ export function LiveScreen() {
             </p>
             <h1>{player.name}</h1>
           </div>
-          <button
-            type="button"
-            className={styles.ghost}
-            onClick={() => setConfirmingNewGame(true)}
-          >
-            Новая партия
-          </button>
+          <div className={styles.headerActions}>
+            <ReinforcementDie />
+            <Button
+              size="compact"
+              onClick={() => setConfirmingNewGame(true)}
+            >
+              Новая партия
+            </Button>
+          </div>
         </header>
 
         <section className={styles.status}>
@@ -149,20 +169,21 @@ export function LiveScreen() {
           </p>
         ) : (
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={action === 'expand' ? styles.on : styles.off}
+            <Button
+              variant={action === 'expand' ? 'selected' : 'secondary'}
               onClick={() => setAction('expand')}
             >
               Расширение
-            </button>
-            <button
-              type="button"
-              className={action === 'decline' ? styles.on : styles.off}
-              onClick={() => setAction('decline')}
+            </Button>
+            <Button
+              variant={action === 'decline' ? 'selected' : 'secondary'}
+              onClick={() => {
+                setAction('decline')
+                setScore((current) => ({ ...current, activeRegions: 0 }))
+              }}
             >
               Упадок
-            </button>
+            </Button>
           </div>
         )}
 
@@ -173,82 +194,18 @@ export function LiveScreen() {
           </p>
         )}
 
-        <div className={styles.card}>
-          <h2>Очки этого хода</h2>
-          <label>
-            Всего монет
-            <input
-              type="number"
-              min={0}
-              value={score.total}
-              onChange={(e) =>
-                setScore({ ...score, total: parseNonNeg(e.target.value) })
-              }
-            />
-          </label>
-          <details>
-            <summary>Разбивка (необязательно)</summary>
-            <div className={styles.row}>
-              <label>
-                Регионы активной
-                <input
-                  type="number"
-                  min={0}
-                  value={score.activeRegions ?? ''}
-                  onChange={(e) =>
-                    setScore({
-                      ...score,
-                      activeRegions:
-                        e.target.value === ''
-                          ? undefined
-                          : parseNonNeg(e.target.value),
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Регионы упадка
-                <input
-                  type="number"
-                  min={0}
-                  value={score.declineRegions ?? ''}
-                  onChange={(e) =>
-                    setScore({
-                      ...score,
-                      declineRegions:
-                        e.target.value === ''
-                          ? undefined
-                          : parseNonNeg(e.target.value),
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Бонусы
-                <input
-                  type="number"
-                  min={0}
-                  value={score.bonus ?? ''}
-                  onChange={(e) =>
-                    setScore({
-                      ...score,
-                      bonus:
-                        e.target.value === ''
-                          ? undefined
-                          : parseNonNeg(e.target.value),
-                    })
-                  }
-                />
-              </label>
-            </div>
-          </details>
-        </div>
+        <TurnScoreInput
+          action={activeAction}
+          value={score}
+          reminders={scoreReminders}
+          onChange={setScore}
+        />
 
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <button type="button" className={styles.submit} onClick={submit}>
+        <Button variant="primary" className={styles.submit} onClick={submit}>
           {activeAction === 'select' ? 'Взять связку и записать ход' : 'Записать ход'}
-        </button>
+        </Button>
       </main>
 
       <aside className={styles.sidebar}>
@@ -298,17 +255,17 @@ export function LiveScreen() {
         <section className={styles.panel}>
           <h2>Партия</h2>
           <div className={styles.toolbar}>
-            <button
-              type="button"
+            <Button
+              size="compact"
               disabled={game.history.length === 0}
               onClick={undoTurn}
             >
               Отменить ход
-            </button>
+            </Button>
             {game.history.length > 0 && (
-              <button type="button" onClick={goAnalytics}>
+              <Button size="compact" onClick={goAnalytics}>
                 К аналитике
-              </button>
+              </Button>
             )}
           </div>
           <ToggleSwitch

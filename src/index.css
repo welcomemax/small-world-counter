@@ -50,6 +50,10 @@
   --warn-bg: #f0d9b8;
   --sans: 'Unbounded', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 
+  /* One content zone for every screen and the footer. */
+  --page-max: 1180px;
+  --page-pad: clamp(1.25rem, 2.5vw, 2rem);
+
   color: var(--ink);
   background: #e7d3b0;
   font: 17px/140% var(--sans);

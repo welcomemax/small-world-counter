@@ -1,7 +1,6 @@
 import { formatCombo } from '../game/catalog'
 import { isComplete, playerTotal } from '../game/game'
 import type { Game } from '../game/types'
-import { LLM_RECAP_ENABLED } from './llmRecap'
 
 export type Recap = {
   winnerNames: string[]
@@ -68,12 +67,6 @@ export const generateRecap: RecapGenerator = (game) => {
       `${player.name}: старт — ${startCombo}. ${declineText}; ${peakText}. Итог: ${playerTotal(game, player.id)}.`,
     )
   }
-
-  paragraphs.push(
-    LLM_RECAP_ENABLED
-      ? 'Разбор сгенерирован языковой моделью.'
-      : 'Это шаблонный разбор по фактам партии. Позже его можно заменить вызовом LLM (см. analytics/llmRecap.ts). Снимки карты по ходам пока пустые (mapSnapshot).',
-  )
 
   return { winnerNames, paragraphs }
 }

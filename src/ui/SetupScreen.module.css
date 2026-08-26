@@ -1,10 +1,8 @@
 .form {
   display: grid;
   gap: 1.25rem;
-  width: min(1180px, 100%);
   min-height: 100svh;
-  margin: 0 auto;
-  padding: clamp(1.25rem, 3vw, 2.5rem);
+  padding: var(--page-pad);
   text-align: left;
 }
 
@@ -398,34 +396,20 @@
   font-size: 0.64rem;
 }
 
-.launch > button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
+.play {
   min-width: 11rem;
   min-height: 54px;
   padding: 0.8rem 1.15rem;
-  border: 0;
-  border-radius: 13px;
-  background: var(--accent);
-  color: white;
-  font: inherit;
   font-size: 0.92rem;
-  font-weight: 700;
 }
 
-.launch > button span {
+.play span {
   font-size: 1.3rem;
 }
 
-.launch > button:focus-visible {
+.play:focus-visible {
   outline: 3px solid var(--warn-bg);
   outline-offset: 2px;
-}
-
-.launch > button:disabled {
-  filter: saturate(0.45);
 }
 
 @keyframes winner {
@@ -457,7 +441,6 @@
 @media (max-width: 560px) {
   .form {
     gap: 0.9rem;
-    padding: 1rem;
   }
 
   .hero {
@@ -492,7 +475,7 @@
     bottom: 0.5rem;
   }
 
-  .launch > button {
+  .play {
     min-width: 7.5rem;
   }
 

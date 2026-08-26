@@ -13,7 +13,8 @@
   font-weight: 650;
 }
 
-.heading strong {
+.heading strong,
+.exact {
   display: grid;
   place-items: center;
   min-width: 2.4rem;
@@ -25,7 +26,14 @@
   color: var(--accent);
 }
 
-.control input {
+.exact {
+  width: 4.25rem;
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+}
+
+.range {
   width: 100%;
   min-width: 0;
   height: 1.25rem;
@@ -36,7 +44,7 @@
   cursor: pointer;
 }
 
-.control input::-webkit-slider-runnable-track {
+.range::-webkit-slider-runnable-track {
   height: 0.35rem;
   border-radius: 999px;
   background: linear-gradient(
@@ -46,19 +54,19 @@
   );
 }
 
-.control input::-moz-range-track {
+.range::-moz-range-track {
   height: 0.35rem;
   border-radius: 999px;
   background: var(--line);
 }
 
-.control input::-moz-range-progress {
+.range::-moz-range-progress {
   height: 0.35rem;
   border-radius: 999px;
   background: var(--accent);
 }
 
-.control input::-webkit-slider-thumb {
+.range::-webkit-slider-thumb {
   width: 1.3rem;
   height: 1.3rem;
   margin-top: -0.48rem;
@@ -69,7 +77,7 @@
   box-shadow: 0 0 0 1px var(--accent);
 }
 
-.control input::-moz-range-thumb {
+.range::-moz-range-thumb {
   width: 1rem;
   height: 1rem;
   border: 3px solid var(--paper);
@@ -78,19 +86,20 @@
   box-shadow: 0 0 0 1px var(--accent);
 }
 
-.control input:focus-visible {
+.range:focus-visible {
   outline: none;
 }
 
-.control input:focus-visible::-webkit-slider-thumb {
+.range:focus-visible::-webkit-slider-thumb {
   box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px var(--warn-bg);
 }
 
-.control input:focus-visible::-moz-range-thumb {
+.range:focus-visible::-moz-range-thumb {
   box-shadow: 0 0 0 1px var(--accent), 0 0 0 5px var(--warn-bg);
 }
 
-.control input:disabled {
+.range:disabled,
+.exact:disabled {
   cursor: wait;
   opacity: 0.55;
 }

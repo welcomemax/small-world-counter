@@ -19,6 +19,7 @@ import {
   type PlayerTurn,
   type TurnInput,
 } from './types'
+import { validateTurnScore } from './score'
 
 export function defaultTurnCount(playerCount: number): number {
   if (playerCount === 2) return 10
@@ -186,6 +187,7 @@ export function applyTurn(game: Game, input: TurnInput): Game {
   if (isComplete(game)) {
     throw new Error('Game is already complete')
   }
+  validateTurnScore(input.score)
   const actor = currentActor(game)
   const select =
     input.action === 'select' ? resolveSelect(game, input) : undefined

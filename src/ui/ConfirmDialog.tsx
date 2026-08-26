@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { Button } from './Button'
 import styles from './ConfirmDialog.module.css'
 
 type Props = {
@@ -77,17 +78,12 @@ export function ConfirmDialog({
         <h2 id={titleId}>{title}</h2>
         <p id={descriptionId}>{description}</p>
         <div className={styles.actions}>
-          <button ref={cancelRef} type="button" className={styles.cancel} onClick={onCancel}>
+          <Button ref={cancelRef} size="compact" className={styles.cancel} onClick={onCancel}>
             {cancelLabel}
-          </button>
-          <button
-            ref={confirmRef}
-            type="button"
-            className={styles.confirm}
-            onClick={onConfirm}
-          >
+          </Button>
+          <Button ref={confirmRef} variant="primary" size="compact" onClick={onConfirm}>
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </section>
     </div>

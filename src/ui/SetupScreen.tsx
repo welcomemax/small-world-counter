@@ -9,6 +9,7 @@ import {
 } from '../game/recentNames'
 import type { Combo } from '../game/types'
 import { useGame } from '../state/GameContext'
+import { Button } from './Button'
 import { DiscreteSlider } from './DiscreteSlider'
 import { MarketColumn } from './MarketColumn'
 import { PlayerSetupCard } from './PlayerSetupCard'
@@ -269,9 +270,9 @@ export function SetupScreen() {
             </small>
           </p>
         </div>
-        <button type="submit" disabled={!ready || isRolling}>
+        <Button type="submit" variant="primary" className={styles.play} disabled={!ready || isRolling}>
           Играть <span aria-hidden="true">→</span>
-        </button>
+        </Button>
       </footer>
     </form>
   )

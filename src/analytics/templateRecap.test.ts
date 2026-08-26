@@ -27,5 +27,6 @@ describe('generateRecap', () => {
     expect(recap.paragraphs.join('\n')).toMatch(/Анна/)
     expect(recap.paragraphs.join('\n')).toMatch(/упад/)
     expect(recap.paragraphs.join('\n')).toMatch(/Борис/)
+    expect(recap.paragraphs.join('\n')).not.toMatch(/llmRecap|mapSnapshot|шаблонный разбор/i)
   })
 })

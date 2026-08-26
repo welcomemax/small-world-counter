@@ -62,21 +62,25 @@ export function MarketColumn({
         const label = slot.combo
           ? formatCombo(slot.combo.race, slot.combo.power)
           : 'пусто — впишите связку'
+        const selected = onSelect ? index === selectedIndex : false
         return (
           <div
             key={index}
             className={[
-              index === selectedIndex ? styles.selected : styles.slot,
+              styles.slot,
+              selected ? styles.selected : '',
               index === randomizedIndex ? styles.dealt : '',
             ]
               .filter(Boolean)
               .join(' ')}
+            data-selected={onSelect ? selected : undefined}
           >
             <div className={styles.head}>
               <button
                 type="button"
                 className={styles.pick}
                 disabled={!onSelect || !slot.combo}
+                aria-pressed={onSelect ? selected : undefined}
                 onClick={() => onSelect?.(index)}
               >
                 <span className={styles.meta}>

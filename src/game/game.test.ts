@@ -166,7 +166,7 @@ describe('applyTurn', () => {
     const started = openingPicks(twoPlayerGame(), 0, 0)
     const afterAnna = applyTurn(started, {
       action: 'expand',
-      score: { total: 4, activeRegions: 3, bonus: 1 },
+      score: { total: 4, activeRegions: 3, declineRegions: 0, bonus: 1 },
     })
     expect(playerTotal(afterAnna, started.players[0]!.id)).toBe(9)
     expect(currentActor(afterAnna)).toEqual({
@@ -189,7 +189,10 @@ describe('applyTurn', () => {
   test('decline then select: next turn for that player must pick a new combo', () => {
     let game = openingPicks(twoPlayerGame({ turnCount: 3 }), 0, 0)
     const firstCombo = game.players[0]!.activeCombo
-    game = applyTurn(game, { action: 'decline', score: { total: 5, declineRegions: 5 } })
+    game = applyTurn(game, {
+      action: 'decline',
+      score: { total: 5, activeRegions: 0, declineRegions: 5, bonus: 0 },
+    })
     game = applyTurn(game, { action: 'expand', score: { total: 2 } })
     const anna = game.players[0]!
     expect(anna.activeCombo).toBeNull()
@@ -204,7 +207,7 @@ describe('applyTurn', () => {
     game = applyTurn(game, {
       action: 'select',
       marketIndex: 1,
-      score: { total: 6, activeRegions: 4, declineRegions: 2 },
+      score: { total: 6, activeRegions: 4, declineRegions: 2, bonus: 0 },
     })
     expect(game.players[0]!.activeCombo).toEqual(slot.combo)
     expect(game.players[0]!.awaitingSelect).toBe(false)
