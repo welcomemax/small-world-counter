@@ -38,8 +38,71 @@ describe('TurnScoreInput', () => {
       screen.getByLabelText('Точное число регионов в упадке'),
       { target: { value: '2' } },
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Увеличить бонусы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Увеличить: Бонусы' }))
     expect(screen.getByText('Итого: 8 монет')).toBeTruthy()
+  })
+
+  test('follows the order players count in: decline, active race, bonuses', () => {
+    render(<Controlled />)
+    const decline = screen.getByLabelText('Точное число регионов в упадке')
+    const active = screen.getByLabelText('Точное число активных регионов')
+    const bonus = screen.getByLabelText('Точное число бонусных монет')
+
+    expect(
+      decline.compareDocumentPosition(active) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      active.compareDocumentPosition(bonus) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  test('gives bonuses the same slider and side buttons as the region rows', () => {
+    render(<Controlled />)
+    const bonus = screen.getByLabelText('Бонусы')
+    expect(bonus.getAttribute('type')).toBe('range')
+    fireEvent.click(screen.getByRole('button', { name: 'Увеличить: Бонусы' }))
+    expect(screen.getByText('Итого: 1 монет')).toBeTruthy()
+  })
+
+  test('steps a slider with the buttons on either side of the track', () => {
+    render(<Controlled />)
+    const up = screen.getByRole('button', { name: 'Увеличить: Регионы в упадке' })
+    const down = screen.getByRole('button', {
+      name: 'Уменьшить: Регионы в упадке',
+    })
+
+    expect(down.hasAttribute('disabled')).toBe(true)
+    fireEvent.click(up)
+    fireEvent.click(up)
+    fireEvent.click(down)
+
+    expect(
+      screen.getByLabelText<HTMLInputElement>('Точное число регионов в упадке')
+        .value,
+    ).toBe('1')
+    expect(screen.getByText('Итого: 1 монет')).toBeTruthy()
+  })
+
+  test('uses plain text fields so browsers add no spinners', () => {
+    render(<Controlled />)
+    for (const label of [
+      'Точное число регионов в упадке',
+      'Точное число активных регионов',
+      'Точное число бонусных монет',
+    ]) {
+      const input = screen.getByLabelText(label)
+      expect(input.getAttribute('type')).toBe('text')
+      expect(input.getAttribute('inputmode')).toBe('numeric')
+    }
+  })
+
+  test('keeps only the digits typed into a text field', () => {
+    render(<Controlled />)
+    fireEvent.change(screen.getByLabelText('Точное число активных регионов'), {
+      target: { value: '7 регионов' },
+    })
+    expect(screen.getByText('Итого: 7 монет')).toBeTruthy()
   })
 
   test('adapts a decline turn and displays scoring reminders', () => {

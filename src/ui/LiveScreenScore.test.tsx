@@ -89,7 +89,7 @@ describe('LiveScreen turn score', () => {
       screen.getByLabelText('Точное число регионов в упадке'),
       { target: { value: '1' } },
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Увеличить бонусы' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Увеличить: Бонусы' }))
     fireEvent.click(screen.getByRole('button', { name: 'Записать ход' }))
 
     expect(recordTurn).toHaveBeenCalledWith({

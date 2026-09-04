@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { parseNonNeg } from './parseNumber'
+import { parseDigits } from './parseNumber'
 import styles from './DiscreteSlider.module.css'
 
 type Props = {
@@ -12,6 +12,8 @@ type Props = {
   onChange: (value: number) => void
   disabled?: boolean
   valueInputLabel?: string
+  /** Buttons on both sides of the track, for one-tap corrections. */
+  steppers?: boolean
 }
 
 export function DiscreteSlider({
@@ -24,6 +26,7 @@ export function DiscreteSlider({
   onChange,
   disabled = false,
   valueInputLabel,
+  steppers = false,
 }: Props) {
   const effectiveMax = Math.max(max, value)
   const progress =
@@ -37,37 +40,63 @@ export function DiscreteSlider({
         {valueInputLabel ? (
           <input
             className={styles.exact}
-            type="number"
-            min={min}
-            step={1}
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
             value={value}
             disabled={disabled}
             aria-label={valueInputLabel}
             onChange={(event) =>
-              onChange(Math.floor(parseNonNeg(event.target.value)))
+              onChange(Math.max(min, parseDigits(event.target.value)))
             }
           />
         ) : (
           <strong>{value}</strong>
         )}
       </span>
-      <input
-        id={id}
-        className={styles.range}
-        type="range"
-        min={min}
-        max={effectiveMax}
-        step={1}
-        value={value}
-        disabled={disabled}
-        style={sliderStyle}
-        onChange={(event) => onChange(Number(event.target.value))}
-      />
-      <span className={styles.marks} aria-hidden="true">
-        {marks.map((mark) => (
-          <span key={mark}>{mark}</span>
-        ))}
-      </span>
+      <div className={styles.track}>
+        {steppers && (
+          <button
+            type="button"
+            className={styles.step}
+            aria-label={`Уменьшить: ${label}`}
+            disabled={disabled || value <= min}
+            onClick={() => onChange(Math.max(min, value - 1))}
+          >
+            −
+          </button>
+        )}
+        <div className={styles.rangeWrap}>
+          <input
+            id={id}
+            className={styles.range}
+            type="range"
+            min={min}
+            max={effectiveMax}
+            step={1}
+            value={value}
+            disabled={disabled}
+            style={sliderStyle}
+            onChange={(event) => onChange(Number(event.target.value))}
+          />
+          <span className={styles.marks} aria-hidden="true">
+            {marks.map((mark) => (
+              <span key={mark}>{mark}</span>
+            ))}
+          </span>
+        </div>
+        {steppers && (
+          <button
+            type="button"
+            className={styles.step}
+            aria-label={`Увеличить: ${label}`}
+            disabled={disabled}
+            onClick={() => onChange(value + 1)}
+          >
+            +
+          </button>
+        )}
+      </div>
     </div>
   )
 }

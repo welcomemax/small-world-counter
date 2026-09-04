@@ -1,5 +1,6 @@
 .card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   padding: 1rem;
   border: 1px solid var(--line);
@@ -48,45 +49,7 @@
 .bonusBlock {
   display: grid;
   gap: 0.55rem;
-}
-
-.bonusLabel {
-  font-size: 0.82rem;
-  font-weight: 650;
-}
-
-.stepper {
-  display: grid;
-  grid-template-columns: 44px minmax(4rem, 7rem) 44px;
-  gap: 0.45rem;
-}
-
-.stepper button,
-.stepper input {
-  min-height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--paper);
-  color: var(--ink);
-  font: inherit;
-  font-weight: 750;
-  text-align: center;
-}
-
-.stepper button {
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.stepper button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.stepper button:focus-visible,
-.stepper input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  min-width: 0;
 }
 
 .reminders {
@@ -103,16 +66,4 @@
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.4;
-}
-
-@media (min-width: 720px) {
-  .card {
-    grid-template-columns: 1fr 1fr;
-    gap: 1.15rem 1.4rem;
-  }
-
-  .header,
-  .declineNote {
-    grid-column: 1 / -1;
-  }
 }

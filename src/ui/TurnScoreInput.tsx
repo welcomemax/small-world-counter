@@ -2,7 +2,6 @@ import { useId } from 'react'
 import { scoreTotal, type ScoreBreakdown } from '../game/score'
 import type { TurnAction } from '../game/types'
 import { DiscreteSlider } from './DiscreteSlider'
-import { parseNonNeg } from './parseNumber'
 import styles from './TurnScoreInput.module.css'
 
 type Props = {
@@ -13,10 +12,6 @@ type Props = {
 }
 
 const MARKS = [0, 5, 10, 15, 20]
-
-function coinValue(raw: string): number {
-  return Math.floor(parseNonNeg(raw))
-}
 
 export function TurnScoreInput({
   action,
@@ -41,21 +36,10 @@ export function TurnScoreInput({
         </output>
       </header>
 
-      {action === 'decline' ? (
+      {action === 'decline' && (
         <p className={styles.declineNote}>
           В ход упадка считайте новую расу в поле «Регионы в упадке».
         </p>
-      ) : (
-        <DiscreteSlider
-          id={`${id}-active`}
-          label="Регионы активной расы"
-          valueInputLabel="Точное число активных регионов"
-          value={value.activeRegions}
-          min={0}
-          max={20}
-          marks={MARKS}
-          onChange={(next) => setPart('activeRegions', next)}
-        />
       )}
 
       <DiscreteSlider
@@ -66,35 +50,36 @@ export function TurnScoreInput({
         min={0}
         max={20}
         marks={MARKS}
+        steppers
         onChange={(next) => setPart('declineRegions', next)}
       />
 
+      {action !== 'decline' && (
+        <DiscreteSlider
+          id={`${id}-active`}
+          label="Регионы активной расы"
+          valueInputLabel="Точное число активных регионов"
+          value={value.activeRegions}
+          min={0}
+          max={20}
+          marks={MARKS}
+          steppers
+          onChange={(next) => setPart('activeRegions', next)}
+        />
+      )}
+
       <div className={styles.bonusBlock}>
-        <span className={styles.bonusLabel}>Бонусы</span>
-        <div className={styles.stepper}>
-          <button
-            type="button"
-            aria-label="Уменьшить бонусы"
-            onClick={() => setPart('bonus', value.bonus - 1)}
-          >
-            −
-          </button>
-          <input
-            type="number"
-            min={0}
-            step={1}
-            value={value.bonus}
-            aria-label="Точное число бонусных монет"
-            onChange={(event) => setPart('bonus', coinValue(event.target.value))}
-          />
-          <button
-            type="button"
-            aria-label="Увеличить бонусы"
-            onClick={() => setPart('bonus', value.bonus + 1)}
-          >
-            +
-          </button>
-        </div>
+        <DiscreteSlider
+          id={`${id}-bonus`}
+          label="Бонусы"
+          valueInputLabel="Точное число бонусных монет"
+          value={value.bonus}
+          min={0}
+          max={20}
+          marks={MARKS}
+          steppers
+          onChange={(next) => setPart('bonus', next)}
+        />
         {reminders.length > 0 && (
           <aside className={styles.reminders} aria-label="Напоминания о бонусах">
             {reminders.map((reminder) => (
