@@ -74,9 +74,19 @@ export type Game = {
   market: ComboMarket
   /** Column state before each recorded turn, so undo can restore it. */
   marketHistory: ComboMarket[]
+  /** In-decline races removed from the map before a later decline. */
+  declineWipes: DeclineWipe[]
 }
 
 export type Actor = {
   playerId: string
   round: number
+}
+
+/** A declined combo whose last tokens left the map; race and power return to the stacks. */
+export type DeclineWipe = {
+  playerId: string
+  combo: Combo
+  /** History length when the wipe was recorded. */
+  at: number
 }

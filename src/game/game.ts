@@ -13,6 +13,7 @@ import {
   type Combo,
   type ComboCoins,
   type CreateGameInput,
+  type DeclineWipe,
   type Game,
   type PlayerSetup,
   type PlayerState,
@@ -32,6 +33,10 @@ function comboNet(coins: ComboCoins | undefined): number {
   return coins.taken - coins.paid
 }
 
+function sameCombo(a: Combo, b: Combo): boolean {
+  return a.race === b.race && a.power === b.power
+}
+
 function nextDeclined(current: Combo[], incoming: Combo): Combo[] {
   if (isSpiritPower(incoming.power)) {
     return [...current, incoming]
@@ -39,7 +44,25 @@ function nextDeclined(current: Combo[], incoming: Combo): Combo[] {
   return [...current.filter((combo) => isSpiritPower(combo.power)), incoming]
 }
 
-function derivePlayers(setup: PlayerSetup[], history: PlayerTurn[]): PlayerState[] {
+function applyWipes(
+  players: PlayerState[],
+  wipes: DeclineWipe[],
+  at: number,
+): void {
+  const byId = new Map(players.map((player) => [player.id, player]))
+  for (const wipe of wipes) {
+    if (wipe.at !== at) continue
+    const player = byId.get(wipe.playerId)
+    if (!player) continue
+    player.declined = player.declined.filter((combo) => !sameCombo(combo, wipe.combo))
+  }
+}
+
+function derivePlayers(
+  setup: PlayerSetup[],
+  history: PlayerTurn[],
+  declineWipes: DeclineWipe[] = [],
+): PlayerState[] {
   const players: PlayerState[] = setup.map((entry, index) => ({
     id: `p${index}`,
     name: entry.name,
@@ -49,7 +72,7 @@ function derivePlayers(setup: PlayerSetup[], history: PlayerTurn[]): PlayerState
   }))
 
   const byId = new Map(players.map((p) => [p.id, p]))
-  for (const turn of history) {
+  history.forEach((turn, index) => {
     const player = byId.get(turn.playerId)
     if (!player) {
       throw new Error(`Unknown player ${turn.playerId}`)
@@ -75,7 +98,8 @@ function derivePlayers(setup: PlayerSetup[], history: PlayerTurn[]): PlayerState
       player.activeCombo = turn.newCombo
       player.awaitingSelect = false
     }
-  }
+    applyWipes(players, declineWipes, index + 1)
+  })
 
   return players
 }
@@ -83,7 +107,12 @@ function derivePlayers(setup: PlayerSetup[], history: PlayerTurn[]): PlayerState
 function withPlayers(
   game: Omit<Game, 'players'> & { players?: PlayerState[] },
 ): Game {
-  return { ...game, players: derivePlayers(game.setup, game.history) }
+  const declineWipes = game.declineWipes ?? []
+  return {
+    ...game,
+    declineWipes,
+    players: derivePlayers(game.setup, game.history, declineWipes),
+  }
 }
 
 export function createGame(input: CreateGameInput): Game {
@@ -102,6 +131,7 @@ export function createGame(input: CreateGameInput): Game {
     firstPlayerIndex,
     market: input.market ?? emptyMarket(),
     marketHistory: [],
+    declineWipes: [],
   })
 }
 
@@ -118,6 +148,7 @@ export function hydrateGame(stored: unknown): Game | null {
     firstPlayerIndex: game.firstPlayerIndex ?? 0,
     market: game.market,
     marketHistory: Array.isArray(game.marketHistory) ? game.marketHistory : [],
+    declineWipes: Array.isArray(game.declineWipes) ? game.declineWipes : [],
   })
 }
 
@@ -215,11 +246,28 @@ export function applyTurn(game: Game, input: TurnInput): Game {
 export function undo(game: Game): Game {
   if (game.history.length === 0) return game
   const restored = game.marketHistory.at(-1) ?? game.market
+  const history = game.history.slice(0, -1)
   return withPlayers({
     ...game,
-    history: game.history.slice(0, -1),
+    history,
     market: restored,
     marketHistory: game.marketHistory.slice(0, -1),
+    declineWipes: game.declineWipes.filter((wipe) => wipe.at <= history.length),
+  })
+}
+
+/** Tokens of this in-decline race left the map; the banner and power return to the stacks. */
+export function wipeDeclinedCombo(game: Game, playerId: string, combo: Combo): Game {
+  const player = game.players.find((entry) => entry.id === playerId)
+  if (!player?.declined.some((held) => sameCombo(held, combo))) {
+    return game
+  }
+  return withPlayers({
+    ...game,
+    declineWipes: [
+      ...game.declineWipes,
+      { playerId, combo, at: game.history.length },
+    ],
   })
 }
 

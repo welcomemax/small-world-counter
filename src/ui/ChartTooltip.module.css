@@ -1,0 +1,47 @@
+.tooltip {
+  min-width: 9rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 10px 28px rgba(8, 5, 3, 0.28);
+}
+
+/* Two class levels so the screen's own `.card p` rule cannot win. */
+.tooltip .label {
+  margin: 0 0 0.15rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.tooltip ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.05rem;
+}
+
+.tooltip li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+.numbers {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.gain {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 650;
+}

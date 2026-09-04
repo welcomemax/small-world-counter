@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { formatCombo } from '../game/catalog'
 import { currentActor, isComplete, playerTotal } from '../game/game'
 import { isMarketReady } from '../game/market'
-import { pickedCombos, randomReplacementCombo } from '../game/pool'
+import { occupiedCombos, randomReplacementCombo } from '../game/pool'
 import { toTurnScore, type ScoreBreakdown } from '../game/score'
 import { scoringRemindersForTurn } from '../game/scoringReminders'
 import type { TurnAction } from '../game/types'
@@ -34,7 +34,8 @@ export function LiveScreen() {
   } = useGame()
   const [action, setAction] = useState<TurnAction>('expand')
   const [score, setScore] = useState<ScoreBreakdown>(emptyScore)
-  const [marketIndex, setMarketIndex] = useState(0)
+  /** No row is picked up front: a leftover default is too easy to submit by accident. */
+  const [marketIndex, setMarketIndex] = useState<number | null>(null)
   const [editingSlot, setEditingSlot] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [confirmingNewGame, setConfirmingNewGame] = useState(false)
@@ -50,7 +51,7 @@ export function LiveScreen() {
     () => (game && player ? game.players.filter((p) => p.id !== player.id) : []),
     [game, player],
   )
-  const usedCombos = useMemo(() => (game ? pickedCombos(game) : []), [game])
+  const usedCombos = useMemo(() => (game ? occupiedCombos(game) : []), [game])
 
   useEffect(
     () => () => {
@@ -63,10 +64,11 @@ export function LiveScreen() {
 
   if (!game || !actor || !player) return null
 
+  const pickedSlot =
+    marketIndex === null ? null : game.market.slots[marketIndex]?.combo ?? null
+  const needsPick = activeAction === 'select' && marketIndex === null
   const scoringCombo =
-    activeAction === 'select'
-      ? game.market.slots[marketIndex]?.combo ?? null
-      : player.activeCombo
+    activeAction === 'select' ? pickedSlot : player.activeCombo
   const scoreReminders = scoringRemindersForTurn({
     action: activeAction,
     activeCombo: scoringCombo,
@@ -79,10 +81,13 @@ export function LiveScreen() {
       recordTurn({
         action: activeAction,
         score: toTurnScore(score),
-        marketIndex: activeAction === 'select' ? marketIndex : undefined,
+        marketIndex:
+          activeAction === 'select' && marketIndex !== null
+            ? marketIndex
+            : undefined,
       })
       setScore(emptyScore)
-      setMarketIndex(0)
+      setMarketIndex(null)
       setEditingSlot(null)
       setAction('expand')
     } catch (e) {
@@ -203,7 +208,18 @@ export function LiveScreen() {
 
         {error ? <p className={styles.error}>{error}</p> : null}
 
-        <Button variant="primary" className={styles.submit} onClick={submit}>
+        {needsPick && (
+          <p className={styles.muted}>
+            Строка драфта не выбрана заранее — отметьте её в колонке.
+          </p>
+        )}
+
+        <Button
+          variant="primary"
+          className={styles.submit}
+          disabled={needsPick}
+          onClick={submit}
+        >
           {activeAction === 'select' ? 'Взять связку и записать ход' : 'Записать ход'}
         </Button>
       </main>
@@ -213,7 +229,11 @@ export function LiveScreen() {
           <h2>Драфт</h2>
           <MarketColumn
             market={game.market}
-            selectedIndex={activeAction === 'select' ? marketIndex : undefined}
+            selectedIndex={
+              activeAction === 'select' && marketIndex !== null
+                ? marketIndex
+                : undefined
+            }
             onSelect={activeAction === 'select' ? setMarketIndex : undefined}
             onEditCombo={setMarketCombo}
             onEditCoins={setMarketCoins}

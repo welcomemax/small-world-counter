@@ -44,9 +44,17 @@ function startedGame() {
   return game
 }
 
-function renderLive(recordTurn = vi.fn()) {
+/** Anna declined, Boris expanded: Anna must now pick a new combo. */
+function awaitingSelectGame() {
+  let game = startedGame()
+  game = applyTurn(game, { action: 'decline', score: { total: 3 } })
+  game = applyTurn(game, { action: 'expand', score: { total: 1 } })
+  return game
+}
+
+function renderLive(recordTurn = vi.fn(), game = startedGame()) {
   const value: GameContextValue = {
-    game: startedGame(),
+    game,
     screen: 'live',
     handover: null,
     startGame: vi.fn(),
@@ -109,5 +117,36 @@ describe('LiveScreen turn score', () => {
       screen.queryByLabelText('Точное число активных регионов'),
     ).toBeNull()
     expect(screen.getByText('Итого: 0 монет')).toBeTruthy()
+  })
+})
+
+describe('LiveScreen combo pick after decline', () => {
+  test('leaves every draft row unpicked so the turn cannot be recorded by accident', () => {
+    const recordTurn = renderLive(vi.fn(), awaitingSelectGame())
+
+    expect(screen.queryAllByRole('button', { pressed: true })).toHaveLength(0)
+    const submit = screen.getByRole('button', {
+      name: 'Взять связку и записать ход',
+    })
+    expect(submit.hasAttribute('disabled')).toBe(true)
+
+    fireEvent.click(submit)
+    expect(recordTurn).not.toHaveBeenCalled()
+  })
+
+  test('records the row the player picked', () => {
+    const recordTurn = renderLive(vi.fn(), awaitingSelectGame())
+    fireEvent.click(screen.getAllByRole('button', { pressed: false })[2]!)
+
+    expect(screen.queryAllByRole('button', { pressed: true })).toHaveLength(1)
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Взять связку и записать ход' }),
+    )
+
+    expect(recordTurn).toHaveBeenCalledWith({
+      action: 'select',
+      marketIndex: 2,
+      score: { total: 0, activeRegions: 0, declineRegions: 0, bonus: 0 },
+    })
   })
 })

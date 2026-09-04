@@ -66,16 +66,33 @@ describe('takenIds', () => {
     expect(taken.races.has('wizards')).toBe(false)
   })
 
-  test('keeps a race that was dropped from decline out of the pool', () => {
+  test('returns a dropped in-decline race and its power to the stacks', () => {
     const game = gameWithDroppedDecline()
     const anna = game.players[0]!
     expect(anna.declined).toEqual([{ race: 'elves', power: 'forest' }])
 
     const taken = takenIds(combosInGame(game))
-    expect(taken.races.has('humans')).toBe(true)
-    expect(taken.powers.has('merchant')).toBe(true)
+    expect(taken.races.has('humans')).toBe(false)
+    expect(taken.powers.has('merchant')).toBe(false)
+    expect(taken.races.has('elves')).toBe(true)
+    expect(taken.powers.has('forest')).toBe(true)
     expect(taken.races.has('orcs')).toBe(true)
     expect(taken.races.has('wizards')).toBe(false)
+  })
+
+  test('keeps the only in-decline race taken until it leaves the map', () => {
+    let game = createGame({
+      players: [{ name: 'Анна' }, { name: 'Борис' }],
+      turnCount: 4,
+      market: tableMarket(),
+    })
+    game = applyTurn(game, { action: 'select', marketIndex: 0, score: { total: 0 } })
+    game = applyTurn(game, { action: 'select', marketIndex: 0, score: { total: 0 } })
+    game = applyTurn(game, { action: 'decline', score: { total: 0 } })
+
+    const taken = takenIds(combosInGame(game))
+    expect(taken.races.has('humans')).toBe(true)
+    expect(taken.powers.has('merchant')).toBe(true)
   })
 })
 

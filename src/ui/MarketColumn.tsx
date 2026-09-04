@@ -15,7 +15,7 @@ type Props = {
   editingIndex?: number | null
   onToggleEdit?: (index: number | null) => void
   idPrefix?: string
-  /** Combos in play or in decline; they are gone from the stacks for good. */
+  /** Combos still in play or in decline; wiped ones may return to the stacks. */
   usedCombos?: Combo[]
   onRandomize?: (index: number) => void
   randomizedIndex?: number | null

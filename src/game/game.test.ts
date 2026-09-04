@@ -9,8 +9,10 @@ import {
   isComplete,
   playerTotal,
   undo,
+  wipeDeclinedCombo,
 } from './game'
 import { emptyMarket, setSlotCombo } from './market'
+import { combosInGame, takenIds } from './pool'
 import type { Combo } from './types'
 
 const TABLE_COLUMN: Combo[] = [
@@ -259,6 +261,53 @@ describe('applyTurn', () => {
       { race: 'elves', power: 'spirit' },
       { race: 'trolls', power: 'fortified' },
     ])
+  })
+
+  test('wiping the last declined tokens returns that race and power even if it was the only one', () => {
+    let game = createGame({
+      players: [{ name: 'Анна' }, { name: 'Борис' }],
+      turnCount: 4,
+      market: tableMarket(),
+    })
+    game = applyTurn(game, { action: 'select', marketIndex: 0, score: { total: 0 } })
+    game = applyTurn(game, { action: 'select', marketIndex: 0, score: { total: 0 } })
+    game = applyTurn(game, { action: 'decline', score: { total: 3 } })
+    expect(game.players[0]!.declined).toEqual([{ race: 'humans', power: 'merchant' }])
+
+    game = wipeDeclinedCombo(game, game.players[0]!.id, {
+      race: 'humans',
+      power: 'merchant',
+    })
+    expect(game.players[0]!.declined).toEqual([])
+    const taken = takenIds(combosInGame(game))
+    expect(taken.races.has('humans')).toBe(false)
+    expect(taken.powers.has('merchant')).toBe(false)
+  })
+
+  test('a wipe survives undo of a later turn', () => {
+    let game = createGame({
+      players: [{ name: 'Анна' }, { name: 'Борис' }],
+      turnCount: 4,
+      market: tableMarket(),
+    })
+    game = applyTurn(game, {
+      action: 'select',
+      score: { total: 0 },
+      newCombo: { race: 'humans', power: 'merchant' },
+    })
+    game = applyTurn(game, {
+      action: 'select',
+      score: { total: 0 },
+      newCombo: { race: 'orcs', power: 'flying' },
+    })
+    game = applyTurn(game, { action: 'decline', score: { total: 3 } })
+    game = wipeDeclinedCombo(game, game.players[0]!.id, {
+      race: 'humans',
+      power: 'merchant',
+    })
+    game = applyTurn(game, { action: 'expand', score: { total: 1 } })
+    game = undo(game)
+    expect(game.players[0]!.declined).toEqual([])
   })
 
   test('stores a null mapSnapshot on every recorded turn', () => {

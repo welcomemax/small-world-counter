@@ -3,32 +3,42 @@ import type { Game } from '../game/types'
 
 export type LinePoint = {
   round: number
-} & Record<string, number | string>
+  /** Running coin total by player name. */
+  totals: Record<string, number>
+  /** Coins this round added, by player name. Empty at the starting point. */
+  gains: Record<string, number>
+}
+
+function turnGain(turn: Game['history'][number]): number {
+  const combo = turn.comboCoins
+  return turn.score.total + (combo ? combo.taken - combo.paid : 0)
+}
 
 export function scoreLineData(game: Game): LinePoint[] {
   const running: Record<string, number> = {}
   for (const player of game.players) {
     running[player.id] = playerTotal({ ...game, history: [] }, player.id)
   }
-  const start: LinePoint = { round: 0 }
-  for (const player of game.players) {
-    start[player.name] = running[player.id]!
-  }
-  const points: LinePoint[] = [start]
+  const totalsByName = (): Record<string, number> =>
+    Object.fromEntries(
+      game.players.map((player) => [player.name, running[player.id] ?? 0]),
+    )
+
+  const points: LinePoint[] = [
+    { round: 0, totals: totalsByName(), gains: {} },
+  ]
   const maxRound = Math.max(0, ...game.history.map((t) => t.round))
+  const nameById = new Map(game.players.map((player) => [player.id, player.name]))
+
   for (let round = 1; round <= maxRound; round++) {
-    const slice = game.history.filter((t) => t.round === round)
-    for (const turn of slice) {
-      running[turn.playerId] = (running[turn.playerId] ?? 0) + turn.score.total
-      if (turn.comboCoins) {
-        running[turn.playerId]! += turn.comboCoins.taken - turn.comboCoins.paid
-      }
+    const gains: Record<string, number> = {}
+    for (const turn of game.history.filter((t) => t.round === round)) {
+      const gain = turnGain(turn)
+      running[turn.playerId] = (running[turn.playerId] ?? 0) + gain
+      const name = nameById.get(turn.playerId)
+      if (name) gains[name] = (gains[name] ?? 0) + gain
     }
-    const row: LinePoint = { round }
-    for (const player of game.players) {
-      row[player.name] = running[player.id] ?? 0
-    }
-    points.push(row)
+    points.push({ round, totals: totalsByName(), gains })
   }
   return points
 }

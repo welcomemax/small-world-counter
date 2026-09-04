@@ -13,19 +13,19 @@ export function marketCombos(market: ComboMarket): Combo[] {
 }
 
 /**
- * Combos taken over the whole game. Read from history, not from player state:
- * a race dropped from decline is out of the box for good and never comes back
- * to the column.
+ * Combos currently occupying uniqueness: visible column, active races,
+ * and races still in decline. A wiped or replaced in-decline combo returns
+ * its race and power to the stacks.
  */
-export function pickedCombos(game: Game): Combo[] {
-  return game.history.flatMap((turn) =>
-    turn.action === 'select' && turn.newCombo ? [turn.newCombo] : [],
-  )
+export function occupiedCombos(game: Game): Combo[] {
+  return game.players.flatMap((player) => [
+    ...(player.activeCombo ? [player.activeCombo] : []),
+    ...player.declined,
+  ])
 }
 
-/** Everything that already left the stacks: on the table, in play or in decline. */
 export function combosInGame(game: Game): Combo[] {
-  return [...marketCombos(game.market), ...pickedCombos(game)]
+  return [...marketCombos(game.market), ...occupiedCombos(game)]
 }
 
 export function takenIds(combos: Combo[]): TakenIds {

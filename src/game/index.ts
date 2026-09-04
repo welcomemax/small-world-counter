@@ -12,6 +12,7 @@ export {
   setScoreHidden,
   setTokensOnBoard,
   undo,
+  wipeDeclinedCombo,
 } from './game'
 export {
   MARKET_SIZE,

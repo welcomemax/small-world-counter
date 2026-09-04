@@ -10,13 +10,17 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import type { TooltipContentProps } from 'recharts'
 import { generateRecap } from '../analytics/templateRecap'
-import { scoreLineData, scoreStackData } from '../analytics/charts'
+import {
+  scoreLineData,
+  scoreStackData,
+  type LinePoint,
+} from '../analytics/charts'
 import { formatCombo } from '../game/catalog'
 import { currentActor, isComplete, playerTotal } from '../game/game'
 import { useGame } from '../state/GameContext'
 import { Button } from './Button'
+import { ChartTooltip } from './ChartTooltip'
 import { ConfirmDialog } from './ConfirmDialog'
 import styles from './AnalyticsScreen.module.css'
 
@@ -33,30 +37,6 @@ const AXIS_TICK = { fill: 'var(--muted)', fontSize: 11 }
 
 function playerColor(index: number): string {
   return PLAYER_COLORS[index] ?? PLAYER_COLORS[0]!
-}
-
-function ChartTooltip({
-  active,
-  payload,
-  label,
-}: TooltipContentProps) {
-  if (!active || !payload?.length) return null
-  const rows = payload.filter((entry) => Number(entry.value) > 0)
-  if (rows.length === 0) return null
-
-  return (
-    <div className={styles.tooltip}>
-      <p>{label}</p>
-      <ul>
-        {rows.map((entry) => (
-          <li key={String(entry.dataKey)} style={{ color: entry.color }}>
-            <span>{entry.name}</span>
-            <strong>{entry.value}</strong>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
 }
 
 export function AnalyticsScreen() {
@@ -169,14 +149,15 @@ export function AnalyticsScreen() {
                 tickLine={false}
               />
               <Tooltip
-                content={ChartTooltip}
+                content={(props) => <ChartTooltip {...props} />}
                 cursor={{ stroke: 'var(--muted)', strokeWidth: 1, strokeDasharray: '3 3' }}
               />
               {game.players.map((player, index) => (
                 <Line
                   key={player.id}
                   type="monotone"
-                  dataKey={player.name}
+                  name={player.name}
+                  dataKey={(row: LinePoint) => row.totals[player.name] ?? 0}
                   stroke={playerColor(index)}
                   strokeWidth={2}
                   dot={{ r: 2.5, strokeWidth: 0, fill: playerColor(index) }}
@@ -224,7 +205,7 @@ export function AnalyticsScreen() {
                 tickLine={false}
               />
               <Tooltip
-                content={ChartTooltip}
+                content={(props) => <ChartTooltip {...props} skipZeros />}
                 cursor={{ fill: 'var(--warn-bg)', fillOpacity: 0.35 }}
               />
               {stackSeries.map((series) => (
