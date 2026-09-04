@@ -4,6 +4,7 @@ import {
   rollReinforcementDie,
   type DieFace,
 } from '../game/reinforcementDie'
+import { soundEngine } from '../audio/engine'
 import styles from './ReinforcementDie.module.css'
 import { Button } from './Button'
 
@@ -48,6 +49,7 @@ export function ReinforcementDie() {
   const roll = useCallback(() => {
     clearTimers()
     setFace(null)
+    soundEngine.play('die')
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setFace(rollReinforcementDie())

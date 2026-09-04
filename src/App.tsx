@@ -1,4 +1,6 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { isComplete } from './game'
+import { soundEngine } from './audio/engine'
 import { useGame } from './state/GameContext'
 import { AppFooter } from './ui/AppFooter'
 import { LiveScreen } from './ui/LiveScreen'
@@ -25,8 +27,21 @@ function Screen({ screen }: { screen: ReturnType<typeof useGame>['screen'] }) {
 }
 
 export default function App() {
-  const { screen, handover, dismissHandover } = useGame()
+  const { screen, game, handover, dismissHandover } = useGame()
   const [rulesOpen, setRulesOpen] = useState(false)
+  const previousScreen = useRef(screen)
+
+  useEffect(() => {
+    if (
+      previousScreen.current === 'live' &&
+      screen === 'analytics' &&
+      game &&
+      isComplete(game)
+    ) {
+      soundEngine.play('complete')
+    }
+    previousScreen.current = screen
+  }, [game, screen])
   return (
     <>
       {handover && <TurnTransition {...handover} onDone={dismissHandover} />}

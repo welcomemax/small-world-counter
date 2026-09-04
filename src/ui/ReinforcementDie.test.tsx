@@ -3,6 +3,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { ReinforcementDie } from './ReinforcementDie'
+import { soundEngine } from '../audio/engine'
 
 const roll = vi.hoisted(() => vi.fn())
 
@@ -39,6 +40,15 @@ afterEach(() => {
 })
 
 describe('ReinforcementDie', () => {
+  test('rattles when the overlay opens', () => {
+    const play = vi.spyOn(soundEngine, 'play')
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    open()
+    expect(play).toHaveBeenCalledWith('die')
+    play.mockRestore()
+  })
+
   test('shows a numbered face as extra strength for the conquest', () => {
     roll.mockReturnValue(2)
     render(<ReinforcementDie />)

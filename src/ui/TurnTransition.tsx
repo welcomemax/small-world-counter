@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { soundEngine, type Cue } from '../audio/engine'
 import styles from './TurnTransition.module.css'
 
 export const TURN_TRANSITION_MS = 1400
@@ -10,6 +11,13 @@ type Props = {
   newRound: boolean
   opening: boolean
   onDone: () => void
+  playCue?: (cue: Cue) => void
+}
+
+function cueFor(opening: boolean, newRound: boolean): Cue {
+  if (opening) return 'opening'
+  if (newRound) return 'newRound'
+  return 'handover'
 }
 
 export function TurnTransition({
@@ -19,7 +27,13 @@ export function TurnTransition({
   newRound,
   opening,
   onDone,
+  playCue,
 }: Props) {
+  useEffect(() => {
+    const play = playCue ?? ((cue: Cue) => soundEngine.play(cue))
+    play(cueFor(opening, newRound))
+  }, [opening, newRound, playCue])
+
   useEffect(() => {
     const timer = window.setTimeout(onDone, TURN_TRANSITION_MS)
     const skip = () => onDone()
