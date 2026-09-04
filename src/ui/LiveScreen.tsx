@@ -3,6 +3,7 @@ import { formatCombo } from '../game/catalog'
 import { currentActor, isComplete, playerTotal } from '../game/game'
 import { isMarketReady } from '../game/market'
 import { occupiedCombos, randomReplacementCombo } from '../game/pool'
+import { soundEngine } from '../audio/engine'
 import { toTurnScore, type ScoreBreakdown } from '../game/score'
 import { scoringRemindersForTurn } from '../game/scoringReminders'
 import type { TurnAction } from '../game/types'
@@ -98,6 +99,7 @@ export function LiveScreen() {
   const randomizeDraft = (index: number) => {
     const combo = randomReplacementCombo(game.market, usedCombos, index)
     if (!combo) return
+    soundEngine.play('deal')
     setMarketCombo(index, combo)
     setRandomizedIndex(null)
     if (randomizedTimer.current !== null) {

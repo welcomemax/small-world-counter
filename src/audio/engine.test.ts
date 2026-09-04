@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
-import { SoundEngine, type AudioGraph } from './engine'
+import { SoundEngine, cueForDieFace, type AudioGraph } from './engine'
 
 function stubNode() {
   const node = {
@@ -65,8 +65,31 @@ describe('SoundEngine', () => {
     expect(graph.oscillators.length).toBe(3)
   })
 
+  test('sings the die face: blank is dull, 3 is a rising phrase', () => {
+    const blank = fakeGraph()
+    new SoundEngine(() => blank).play('dieBlank')
+    const triple = fakeGraph()
+    new SoundEngine(() => triple).play('die3')
+    expect(triple.oscillators.length).toBeGreaterThan(blank.oscillators.length)
+    expect(triple.oscillators).toHaveLength(3)
+  })
+
+  test('has a shuffle for the first-player draw and a snap for a new draft row', () => {
+    const graph = fakeGraph()
+    const engine = new SoundEngine(() => graph)
+    engine.play('shuffle')
+    engine.play('deal')
+    expect(graph.oscillators.length).toBeGreaterThan(2)
+  })
+
   test('does nothing when the browser has no audio graph', () => {
     const engine = new SoundEngine(() => null)
     expect(() => engine.play('opening')).not.toThrow()
+  })
+
+  test('maps a face to the matching result cue', () => {
+    expect(cueForDieFace(0)).toBe('dieBlank')
+    expect(cueForDieFace(1)).toBe('die1')
+    expect(cueForDieFace(3)).toBe('die3')
   })
 })

@@ -49,6 +49,26 @@ describe('ReinforcementDie', () => {
     play.mockRestore()
   })
 
+  test('sings the revealed face after the tumble', () => {
+    const play = vi.spyOn(soundEngine, 'play')
+    roll.mockReturnValue(2)
+    render(<ReinforcementDie />)
+    open()
+    settle()
+    expect(play).toHaveBeenCalledWith('die2')
+    play.mockRestore()
+  })
+
+  test('sings a blank face when reduced motion skips the tumble', () => {
+    prefersReducedMotion(true)
+    const play = vi.spyOn(soundEngine, 'play')
+    roll.mockReturnValue(0)
+    render(<ReinforcementDie />)
+    open()
+    expect(play).toHaveBeenCalledWith('dieBlank')
+    play.mockRestore()
+  })
+
   test('shows a numbered face as extra strength for the conquest', () => {
     roll.mockReturnValue(2)
     render(<ReinforcementDie />)

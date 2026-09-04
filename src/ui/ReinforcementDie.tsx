@@ -4,7 +4,7 @@ import {
   rollReinforcementDie,
   type DieFace,
 } from '../game/reinforcementDie'
-import { soundEngine } from '../audio/engine'
+import { cueForDieFace, soundEngine } from '../audio/engine'
 import styles from './ReinforcementDie.module.css'
 import { Button } from './Button'
 
@@ -51,8 +51,13 @@ export function ReinforcementDie() {
     setFace(null)
     soundEngine.play('die')
 
+    const reveal = (next: DieFace) => {
+      setFace(next)
+      soundEngine.play(cueForDieFace(next))
+    }
+
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setFace(rollReinforcementDie())
+      reveal(rollReinforcementDie())
       return
     }
 
@@ -63,7 +68,7 @@ export function ReinforcementDie() {
     }
     timers.current.push(
       window.setTimeout(
-        () => setFace(rollReinforcementDie()),
+        () => reveal(rollReinforcementDie()),
         (TUMBLE_STEPS + 1) * TUMBLE_STEP_MS,
       ),
     )

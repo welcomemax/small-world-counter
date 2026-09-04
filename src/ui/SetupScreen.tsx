@@ -8,6 +8,7 @@ import {
   saveRecentNames,
 } from '../game/recentNames'
 import type { Combo } from '../game/types'
+import { soundEngine } from '../audio/engine'
 import { useGame } from '../state/GameContext'
 import { Button } from './Button'
 import { DiscreteSlider } from './DiscreteSlider'
@@ -70,13 +71,18 @@ export function SetupScreen() {
   }
 
   const randomizeCombo = (index: number) => {
+    let dealt = false
     setMarket((current) => {
       const used = current.slots.flatMap((slot, slotIndex) =>
         slot.combo && slotIndex !== index ? [slot.combo] : [],
       )
       const combo = randomFreeCombo(takenIds(used))
-      return combo ? setSlotCombo(current, index, combo) : current
+      if (!combo) return current
+      dealt = true
+      return setSlotCombo(current, index, combo)
     })
+    if (!dealt) return
+    soundEngine.play('deal')
     setRandomizedIndex(null)
     timers.current.push(
       window.setTimeout(() => setRandomizedIndex(index), 0),
@@ -102,10 +108,13 @@ export function SetupScreen() {
     if (reduceMotion) {
       setFirstPlayerIndex(winner)
       setWinnerPulse(winner)
+      soundEngine.play('shuffle')
+      soundEngine.play('first')
       return
     }
 
     setIsRolling(true)
+    soundEngine.play('shuffle')
     let elapsed = 0
     const distance =
       (winner - firstPlayerIndex + players.length) % players.length
@@ -123,6 +132,7 @@ export function SetupScreen() {
             setRollingIndex(null)
             setIsRolling(false)
             setWinnerPulse(winner)
+            soundEngine.play('first')
             timers.current.push(
               window.setTimeout(() => setWinnerPulse(null), 1000),
             )
