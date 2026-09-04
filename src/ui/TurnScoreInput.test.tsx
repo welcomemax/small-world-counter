@@ -20,7 +20,7 @@ function Controlled({ action = 'expand' }: { action?: TurnAction }) {
       action={action}
       value={value}
       reminders={[
-        'Маги: +1 монета за каждый занятый магический регион.',
+        'Волшебники: +1 монета за каждый занятый магический регион.',
       ]}
       onChange={setValue}
     />
@@ -111,6 +111,6 @@ describe('TurnScoreInput', () => {
       screen.queryByLabelText('Точное число активных регионов'),
     ).toBeNull()
     expect(screen.getByText(/считайте.*регионы в упадке/i)).toBeTruthy()
-    expect(screen.getByText(/Маги: \+1 монета/)).toBeTruthy()
+    expect(screen.getByText(/Волшебники: \+1 монета/)).toBeTruthy()
   })
 })

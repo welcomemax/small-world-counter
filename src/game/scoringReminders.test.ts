@@ -9,7 +9,7 @@ describe('scoring reminders', () => {
       declined: [],
     })
     expect(reminders).toContain(
-      'Маги: +1 монета за каждый занятый магический регион.',
+      'Волшебники: +1 монета за каждый занятый магический регион.',
     )
     expect(reminders).toContain(
       'Богатые: +7 монет один раз, в конце первого хода.',
@@ -35,7 +35,7 @@ describe('scoring reminders', () => {
       declined: [],
     })
     expect(reminders).toEqual([
-      'Гномы: +1 монета за каждую занятую шахту, в том числе в упадке.',
+      'Дварфы: +1 монета за каждую занятую шахту, в том числе в упадке.',
     ])
   })
 
@@ -46,7 +46,7 @@ describe('scoring reminders', () => {
       declined: [{ race: 'dwarves', power: 'spirit' }],
     })
     expect(reminders).toContain(
-      'Гномы: +1 монета за каждую занятую шахту, в том числе в упадке.',
+      'Дварфы: +1 монета за каждую занятую шахту, в том числе в упадке.',
     )
   })
 

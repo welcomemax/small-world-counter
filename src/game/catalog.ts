@@ -60,17 +60,17 @@ export const RACES: CatalogEntry<RaceId>[] = [
   { id: 'amazons', nameRu: 'Амазонки', nameEn: 'Amazons' },
   {
     id: 'dwarves',
-    nameRu: 'Гномы',
+    nameRu: 'Дварфы',
     nameEn: 'Dwarves',
     scoresInDecline: true,
     hint: 'Бонус за шахты сохраняется в упадке.',
     scoring: [
       {
-        text: 'Гномы: +1 монета за каждую занятую шахту, в том числе в упадке.',
+        text: 'Дварфы: +1 монета за каждую занятую шахту, в том числе в упадке.',
         when: 'active',
       },
       {
-        text: 'Гномы: +1 монета за каждую занятую шахту, в том числе в упадке.',
+        text: 'Дварфы: +1 монета за каждую занятую шахту, в том числе в упадке.',
         when: 'decline',
       },
     ],
@@ -106,18 +106,18 @@ export const RACES: CatalogEntry<RaceId>[] = [
       },
     ],
   },
-  { id: 'ratmen', nameRu: 'Крысолюди', nameEn: 'Ratmen' },
+  { id: 'ratmen', nameRu: 'Крысолюды', nameEn: 'Ratmen' },
   { id: 'skeletons', nameRu: 'Скелеты', nameEn: 'Skeletons' },
-  { id: 'sorcerers', nameRu: 'Чародеи', nameEn: 'Sorcerers' },
+  { id: 'sorcerers', nameRu: 'Колдуны', nameEn: 'Sorcerers' },
   { id: 'tritons', nameRu: 'Тритоны', nameEn: 'Tritons' },
   { id: 'trolls', nameRu: 'Тролли', nameEn: 'Trolls' },
   {
     id: 'wizards',
-    nameRu: 'Маги',
+    nameRu: 'Волшебники',
     nameEn: 'Wizards',
     scoring: [
       {
-        text: 'Маги: +1 монета за каждый занятый магический регион.',
+        text: 'Волшебники: +1 монета за каждый занятый магический регион.',
         when: 'active',
       },
     ],
@@ -127,21 +127,21 @@ export const RACES: CatalogEntry<RaceId>[] = [
 export const POWERS: CatalogEntry<PowerId>[] = [
   {
     id: 'alchemist',
-    nameRu: 'Алхимик',
+    nameRu: 'Учёные',
     nameEn: 'Alchemist',
     scoring: [
       {
-        text: 'Алхимик: +2 монеты в конце каждого хода, пока раса активна.',
+        text: 'Учёные: +2 монеты в конце каждого хода, пока раса активна.',
         when: 'active',
       },
     ],
   },
-  { id: 'berserk', nameRu: 'Берсерк', nameEn: 'Berserk' },
-  { id: 'bivouacking', nameRu: 'Бивуак', nameEn: 'Bivouacking' },
-  { id: 'commando', nameRu: 'Коммандос', nameEn: 'Commando' },
-  { id: 'diplomat', nameRu: 'Дипломат', nameEn: 'Diplomat' },
-  { id: 'dragonMaster', nameRu: 'Повелитель драконов', nameEn: 'Dragon Master' },
-  { id: 'flying', nameRu: 'Летающие', nameEn: 'Flying' },
+  { id: 'berserk', nameRu: 'Лютые', nameEn: 'Berserk' },
+  { id: 'bivouacking', nameRu: 'Походные', nameEn: 'Bivouacking' },
+  { id: 'commando', nameRu: 'Боевые', nameEn: 'Commando' },
+  { id: 'diplomat', nameRu: 'Мирные', nameEn: 'Diplomat' },
+  { id: 'dragonMaster', nameRu: 'Драконо-властные', nameEn: 'Dragon Master' },
+  { id: 'flying', nameRu: 'Летучие', nameEn: 'Flying' },
   {
     id: 'forest',
     nameRu: 'Лесные',
@@ -155,11 +155,11 @@ export const POWERS: CatalogEntry<PowerId>[] = [
   },
   {
     id: 'fortified',
-    nameRu: 'Укреплённые',
+    nameRu: 'Укрепленные',
     nameEn: 'Fortified',
     scoring: [
       {
-        text: 'Укреплённые: +1 монета за каждую крепость, пока раса активна.',
+        text: 'Укрепленные: +1 монета за каждую крепость, пока раса активна.',
         when: 'active',
       },
     ],
@@ -178,38 +178,38 @@ export const POWERS: CatalogEntry<PowerId>[] = [
   },
   {
     id: 'merchant',
-    nameRu: 'Торговцы',
+    nameRu: 'Скаредные',
     nameEn: 'Merchant',
     scoring: [
       {
-        text: 'Торговцы: +1 монета за каждый занятый регион.',
+        text: 'Скаредные: +1 монета за каждый занятый регион.',
         when: 'active',
       },
     ],
   },
-  { id: 'mounted', nameRu: 'Конные', nameEn: 'Mounted' },
+  { id: 'mounted', nameRu: 'Верховые', nameEn: 'Mounted' },
   {
     id: 'pillaging',
-    nameRu: 'Грабители',
+    nameRu: 'Разбойные',
     nameEn: 'Pillaging',
     scoring: [
       {
-        text: 'Грабители: +1 монета за каждый непустой регион, завоёванный в этот ход.',
+        text: 'Разбойные: +1 монета за каждый непустой регион, завоёванный в этот ход.',
         when: 'active',
       },
     ],
   },
-  { id: 'seafaring', nameRu: 'Мореходы', nameEn: 'Seafaring' },
+  { id: 'seafaring', nameRu: 'Водные', nameEn: 'Seafaring' },
   {
     id: 'spirit',
-    nameRu: 'Духи',
+    nameRu: 'Призрачные',
     nameEn: 'Spirit',
     spirit: true,
     hint: 'Раса в упадке не занимает слот единственного упадка.',
   },
   {
     id: 'stout',
-    nameRu: 'Крепкие',
+    nameRu: 'Стойкие',
     nameEn: 'Stout',
     hint: 'Можно уйти в упадок в конце хода после завоеваний.',
   },
