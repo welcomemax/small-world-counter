@@ -7,6 +7,11 @@ import {
 } from './catalog'
 import type { Combo, PlayerState, TurnAction } from './types'
 
+const RACKETEERING_REMINDER =
+  'Вымогатели: следующая связка бесплатна, с какой бы строки её ни взяли.'
+const ISLAND_CONTROL_REMINDER =
+  'Небесные острова: +1 за каждый остров, целиком занятый одной вашей расой (активной или в упадке). Озеро занимать не обязательно.'
+
 export type ReminderContext = {
   action: TurnAction
   activeCombo: Combo | null
@@ -33,6 +38,50 @@ function remindersForCombo(
     }
   }
   return texts
+}
+
+function ownExpansionReminders(
+  action: TurnAction,
+  activeCombo: Combo | null,
+  player: PlayerState,
+): string[] {
+  if (action === 'decline' && activeCombo?.power === 'racketeering') {
+    return [RACKETEERING_REMINDER]
+  }
+  if (
+    action === 'select' &&
+    player.awaitingSelect &&
+    player.declined.at(-1)?.power === 'racketeering'
+  ) {
+    return [RACKETEERING_REMINDER]
+  }
+  return []
+}
+
+function rivalExpansionReminders(
+  action: TurnAction,
+  rivals: PlayerState[],
+): string[] {
+  const reminders: string[] = []
+  if (action === 'select' || action === 'expand') {
+    for (const rival of rivals) {
+      if (rival.activeCombo?.race === 'scarecrows') {
+        reminders.push(
+          `Пугала (${rival.name}): +1 из банка за каждый завоёванный регион с активными Пугалами.`,
+        )
+      }
+    }
+  }
+  if (action === 'select') {
+    for (const rival of rivals) {
+      if (rival.activeCombo?.power === 'racketeering') {
+        reminders.push(
+          `Вымогатели (${rival.name}): игрок с Вымогателями получает из банка столько монет, сколько строк вы пропускаете.`,
+        )
+      }
+    }
+  }
+  return reminders
 }
 
 export function scoringRemindersForTurn({
@@ -70,37 +119,9 @@ export function scoringRemindersForTurn({
   )
   const expansionReminders = expansions.skyIslands
     ? [
-        ...(activeCombo?.power === 'racketeering' && action === 'decline'
-          ? [
-              'Вымогатели: следующая связка бесплатна, с какой бы строки её ни взяли.',
-            ]
-          : []),
-        ...(action === 'select' &&
-        player.awaitingSelect &&
-        player.declined.some((combo) => combo.power === 'racketeering')
-          ? [
-              'Вымогатели: следующая связка бесплатна, с какой бы строки её ни взяли.',
-            ]
-          : []),
-        ...((action === 'select' || action === 'expand')
-          ? rivals.flatMap((rival) =>
-              rival.activeCombo?.race === 'scarecrows'
-                ? [
-                    `Пугала (${rival.name}): +1 из банка за каждый завоёванный регион с активными Пугалами.`,
-                  ]
-                : [],
-            )
-          : []),
-        ...(action === 'select'
-          ? rivals.flatMap((rival) =>
-              rival.activeCombo?.power === 'racketeering'
-                ? [
-                    `Вымогатели (${rival.name}): игрок с Вымогателями получает из банка столько монет, сколько строк вы пропускаете.`,
-                  ]
-                : [],
-            )
-          : []),
-        'Небесные острова: +1 за каждый остров, целиком занятый одной вашей расой (активной или в упадке). Озеро занимать не обязательно.',
+        ...ownExpansionReminders(action, activeCombo, player),
+        ...rivalExpansionReminders(action, rivals),
+        ISLAND_CONTROL_REMINDER,
       ]
     : []
   return [...current, ...retained, ...expansionReminders].filter(

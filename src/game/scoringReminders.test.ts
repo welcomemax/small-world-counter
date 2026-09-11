@@ -199,6 +199,29 @@ describe('Sky Islands own-combo reminders', () => {
     ).not.toContain(text)
   })
 
+  test('does not repeat an old Racketeering reminder after a Spirit decline', () => {
+    const oldRacketeers: Combo = {
+      race: 'humans',
+      power: 'racketeering',
+    }
+    const latestSpirit: Combo = { race: 'elves', power: 'spirit' }
+
+    expect(
+      reminders({
+        action: 'select',
+        activeCombo: { race: 'orcs', power: 'flying' },
+        declined: [oldRacketeers, latestSpirit],
+        actor: player({
+          activeCombo: null,
+          declined: [oldRacketeers, latestSpirit],
+          awaitingSelect: true,
+        }),
+      }),
+    ).not.toContain(
+      'Вымогатели: следующая связка бесплатна, с какой бы строки её ни взяли.',
+    )
+  })
+
   test.each(['select', 'expand', 'decline'] as const)(
     'shows the island-control reminder on %s',
     (action) => {
@@ -258,6 +281,22 @@ describe('Sky Islands rival reminders', () => {
         action: 'decline',
         activeCombo: { race: 'humans', power: 'merchant' },
         rivals: [scarecrowOwner, declinedScarecrows],
+      }).join(' '),
+    ).not.toContain('Пугалами')
+  })
+
+  test('ignores rival Scarecrows that exist only in decline while expanding', () => {
+    const declinedScarecrows = player({
+      id: 'p1',
+      name: 'Борис',
+      declined: [{ race: 'scarecrows', power: 'flying' }],
+    })
+
+    expect(
+      reminders({
+        action: 'expand',
+        activeCombo: { race: 'humans', power: 'merchant' },
+        rivals: [declinedScarecrows],
       }).join(' '),
     ).not.toContain('Пугалами')
   })
