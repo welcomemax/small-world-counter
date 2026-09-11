@@ -1,6 +1,12 @@
 import type { Combo } from '../game/types'
-import { POWERS, RACES, formatCombo, powerById, raceById } from '../game/catalog'
-import type { PowerId, RaceId } from '../game/catalog'
+import {
+  DEFAULT_EXPANSIONS,
+  catalogFor,
+  formatCombo,
+  powerById,
+  raceById,
+} from '../game/catalog'
+import type { Expansions, PowerId, RaceId } from '../game/catalog'
 import type { TakenIds } from '../game/pool'
 import styles from './ComboPicker.module.css'
 
@@ -10,16 +16,28 @@ type Props = {
   idPrefix: string
   /** Races and powers already out of the box; the current value stays listed. */
   taken?: TakenIds
+  expansions?: Expansions
 }
 
-export function ComboPicker({ value, onChange, idPrefix, taken }: Props) {
+export function ComboPicker({
+  value,
+  onChange,
+  idPrefix,
+  taken,
+  expansions = DEFAULT_EXPANSIONS,
+}: Props) {
   const race = raceById(value.race)
   const power = powerById(value.power)
   const hint = [power.hint, race.hint].filter(Boolean).join(' ')
-  const powers = POWERS.filter(
+  const catalog = catalogFor(expansions)
+  const powers = catalog.powers.filter(
     (p) => p.id === value.power || !taken?.powers.has(p.id),
   )
-  const races = RACES.filter((r) => r.id === value.race || !taken?.races.has(r.id))
+  const races = catalog.races.filter(
+    (r) => r.id === value.race || !taken?.races.has(r.id),
+  )
+  if (!powers.some(({ id }) => id === value.power)) powers.push(power)
+  if (!races.some(({ id }) => id === value.race)) races.push(race)
 
   return (
     <div className={styles.wrap}>

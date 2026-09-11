@@ -7,6 +7,11 @@ import {
   nameSuggestions,
   saveRecentNames,
 } from '../game/recentNames'
+import {
+  filterMarketForExpansions,
+  loadExpansionPreferences,
+  saveExpansionPreferences,
+} from '../game/setupPreferences'
 import type { Combo } from '../game/types'
 import { soundEngine } from '../audio/engine'
 import { useGame } from '../state/GameContext'
@@ -29,6 +34,7 @@ export function SetupScreen() {
   const [count, setCount] = useState(2)
   const [turnCount, setTurnCount] = useState(() => defaultTurnCount(2))
   const [scoreHidden, setScoreHidden] = useState(true)
+  const [expansions, setExpansions] = useState(loadExpansionPreferences)
   const [firstPlayerIndex, setFirstPlayerIndex] = useState(0)
   const [players, setPlayers] = useState<Draft[]>(() => [
     emptyDraft(),
@@ -70,18 +76,20 @@ export function SetupScreen() {
     setMarket((current) => setSlotCombo(current, index, combo))
   }
 
+  const setSkyIslands = (skyIslands: boolean) => {
+    const next = { ...expansions, skyIslands }
+    saveExpansionPreferences(next)
+    setExpansions(next)
+    setMarket((current) => filterMarketForExpansions(current, next))
+  }
+
   const randomizeCombo = (index: number) => {
-    let dealt = false
-    setMarket((current) => {
-      const used = current.slots.flatMap((slot, slotIndex) =>
-        slot.combo && slotIndex !== index ? [slot.combo] : [],
-      )
-      const combo = randomFreeCombo(takenIds(used))
-      if (!combo) return current
-      dealt = true
-      return setSlotCombo(current, index, combo)
-    })
-    if (!dealt) return
+    const used = market.slots.flatMap((slot, slotIndex) =>
+      slot.combo && slotIndex !== index ? [slot.combo] : [],
+    )
+    const combo = randomFreeCombo(takenIds(used), expansions)
+    if (!combo) return
+    setMarket(setSlotCombo(market, index, combo))
     soundEngine.play('deal')
     setRandomizedIndex(null)
     timers.current.push(
@@ -166,6 +174,7 @@ export function SetupScreen() {
           scoreHidden,
           firstPlayerIndex,
           market,
+          expansions,
         })
       }}
     >
@@ -191,7 +200,11 @@ export function SetupScreen() {
                 <p className={styles.step}>01</p>
                 <h2>Партия</h2>
               </div>
-              <span className={styles.official}>по правилам базы</span>
+              <span className={styles.official}>
+                {expansions.skyIslands
+                  ? 'база + Небесные острова'
+                  : 'по правилам базы'}
+              </span>
             </header>
             <div className={styles.sliders}>
               <DiscreteSlider
@@ -222,6 +235,13 @@ export function SetupScreen() {
                 description="Не показывать итоги до конца партии"
                 disabled={isRolling}
                 onChange={setScoreHidden}
+              />
+              <ToggleSwitch
+                checked={expansions.skyIslands}
+                label="Небесные острова"
+                description="7 рас и 7 сил дополнения в драфте"
+                disabled={isRolling}
+                onChange={setSkyIslands}
               />
             </div>
           </section>
@@ -266,6 +286,7 @@ export function SetupScreen() {
             editingIndex={editingSlot}
             onToggleEdit={setEditingSlot}
             showCaption={false}
+            expansions={expansions}
           />
         </section>
       </div>

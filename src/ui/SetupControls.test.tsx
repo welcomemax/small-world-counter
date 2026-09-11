@@ -1,11 +1,23 @@
+// @vitest-environment jsdom
+
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, test } from 'vitest'
-import { emptyMarket, setSlotCombo } from '../game/market'
+import { afterEach, describe, expect, test } from 'vitest'
+import { emptyMarket, setSlotCoins, setSlotCombo } from '../game/market'
+import { filterMarketForExpansions } from '../game/setupPreferences'
+import { GameProvider } from '../state/GameContext'
+import { ComboPicker } from './ComboPicker'
 import { DiscreteSlider } from './DiscreteSlider'
 import { MarketColumn } from './MarketColumn'
 import { NameCombobox } from './NameCombobox'
 import { PlayerSetupCard } from './PlayerSetupCard'
+import { SetupScreen } from './SetupScreen'
 import { ToggleSwitch } from './ToggleSwitch'
+
+afterEach(() => {
+  cleanup()
+  localStorage.clear()
+})
 
 describe('DiscreteSlider', () => {
   test('renders an accessible native range with its current value and marks', () => {
@@ -76,6 +88,30 @@ describe('MarketColumn setup actions', () => {
     expect(emptyRows.match(/Случайная связка для строки/g)).toHaveLength(5)
     expect(emptyRows).not.toContain('Случайная связка для строки 1')
   })
+
+  test('filters picker options to the enabled catalog but retains its current value', () => {
+    const baseOnly = renderToStaticMarkup(
+      <ComboPicker
+        idPrefix="base"
+        value={{ race: 'humans', power: 'merchant' }}
+        expansions={{ skyIslands: false }}
+        onChange={() => undefined}
+      />,
+    )
+    const retainedDlc = renderToStaticMarkup(
+      <ComboPicker
+        idPrefix="retained"
+        value={{ race: 'khans', power: 'goldsmith' }}
+        expansions={{ skyIslands: false }}
+        onChange={() => undefined}
+      />,
+    )
+
+    expect(baseOnly).not.toContain('value="khans"')
+    expect(baseOnly).not.toContain('value="goldsmith"')
+    expect(retainedDlc).toContain('value="khans"')
+    expect(retainedDlc).toContain('value="goldsmith"')
+  })
 })
 
 describe('ToggleSwitch', () => {
@@ -92,6 +128,74 @@ describe('ToggleSwitch', () => {
     expect(html).toContain('checked=""')
     expect(html).toContain('Скрытый счёт')
     expect(html).toContain('Не показывать итоги до конца партии')
+  })
+})
+
+describe('Sky Islands setup toggle', () => {
+  test('renders accessible copy and restores the saved preference', () => {
+    localStorage.setItem(
+      'small-world-counter.setup.expansions.v1',
+      JSON.stringify({ skyIslands: true }),
+    )
+
+    render(
+      <GameProvider>
+        <SetupScreen />
+      </GameProvider>,
+    )
+
+    expect(
+      (screen.getByRole('checkbox', {
+        name: /Небесные острова/,
+      }) as HTMLInputElement).checked,
+    ).toBe(true)
+    expect(screen.getByText('7 рас и 7 сил дополнения в драфте')).toBeTruthy()
+    expect(screen.getByText('база + Небесные острова')).toBeTruthy()
+  })
+
+  test('removes a DLC setup row when switched off', () => {
+    localStorage.setItem(
+      'small-world-counter.setup.expansions.v1',
+      JSON.stringify({ skyIslands: true }),
+    )
+    render(
+      <GameProvider>
+        <SetupScreen />
+      </GameProvider>,
+    )
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Править связку' })[0]!)
+    fireEvent.change(screen.getByLabelText('Сила'), {
+      target: { value: 'goldsmith' },
+    })
+    expect(screen.getAllByText(/Золотоносные Амазонки/)).toHaveLength(2)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /Небесные острова/ }))
+
+    expect(screen.getAllByText('пусто — впишите связку')[0]).toBeTruthy()
+    expect(localStorage.getItem('small-world-counter.setup.expansions.v1')).toBe(
+      '{"skyIslands":false}',
+    )
+  })
+
+  test('resets both combo and coins for every disabled DLC row', () => {
+    let market = setSlotCombo(emptyMarket(), 0, {
+      race: 'khans',
+      power: 'goldsmith',
+    })
+    market = setSlotCoins(market, 0, 4)
+    market = setSlotCombo(market, 1, {
+      race: 'humans',
+      power: 'merchant',
+    })
+    market = setSlotCoins(market, 1, 3)
+
+    expect(
+      filterMarketForExpansions(market, { skyIslands: false }).slots.slice(0, 2),
+    ).toEqual([
+      { combo: null, coins: 0 },
+      { combo: { race: 'humans', power: 'merchant' }, coins: 3 },
+    ])
   })
 })
 

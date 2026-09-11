@@ -1,4 +1,5 @@
-import { formatCombo } from '../game/catalog'
+import { DEFAULT_EXPANSIONS, formatCombo } from '../game/catalog'
+import type { Expansions } from '../game/catalog'
 import type { ComboMarket } from '../game/market'
 import { firstFreeCombo, takenIds } from '../game/pool'
 import type { Combo } from '../game/types'
@@ -21,6 +22,7 @@ type Props = {
   randomizedIndex?: number | null
   randomizeEmptyOnly?: boolean
   showCaption?: boolean
+  expansions?: Expansions
 }
 
 export function MarketColumn({
@@ -37,6 +39,7 @@ export function MarketColumn({
   randomizedIndex,
   randomizeEmptyOnly = false,
   showCaption = true,
+  expansions = DEFAULT_EXPANSIONS,
 }: Props) {
   const takenExcept = (index: number) =>
     takenIds([
@@ -58,7 +61,8 @@ export function MarketColumn({
         const editing = editingIndex === index
         const available = takenExcept(index)
         const taken = editing ? available : null
-        const draft = slot.combo ?? (taken ? firstFreeCombo(taken) : null)
+        const draft =
+          slot.combo ?? (taken ? firstFreeCombo(taken, expansions) : null)
         const label = slot.combo
           ? formatCombo(slot.combo.race, slot.combo.power)
           : 'пусто — впишите связку'
@@ -96,7 +100,7 @@ export function MarketColumn({
                   <button
                     type="button"
                     className={styles.random}
-                    disabled={!firstFreeCombo(available)}
+                    disabled={!firstFreeCombo(available, expansions)}
                     onClick={() => onRandomize(index)}
                     aria-label={`Случайная связка для строки ${index + 1}`}
                     title="Подобрать случайную свободную связку"
@@ -130,6 +134,7 @@ export function MarketColumn({
                     idPrefix={`${idPrefix}-${index}`}
                     value={draft}
                     taken={taken}
+                    expansions={expansions}
                     onChange={(combo) => onEditCombo(index, combo)}
                   />
                 ) : (
