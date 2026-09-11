@@ -50,7 +50,7 @@ Printed Hobby World / Days of Wonder Russian names; English as on the official t
 
 | Id | RU | EN |
 |---|---|---|
-| wendigos | Вендтиго | Wendigos |
+| wendigos | Вендиго | Wendigos |
 | drakons | Драконы | Drakons |
 | scavengers | Падальщики | Scavengers |
 | scarecrows | Пугала | Scarecrows |

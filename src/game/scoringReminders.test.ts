@@ -138,6 +138,24 @@ describe('Sky Islands own-combo reminders', () => {
     ).toContain(text)
   })
 
+  test('does not repeat Escargots decline copy on later turns', () => {
+    const result = reminders({
+      action: 'expand',
+      activeCombo: { race: 'humans', power: 'merchant' },
+      declined: [
+        { race: 'escargots', power: 'flying' },
+        { race: 'dwarves', power: 'spirit' },
+      ],
+    })
+
+    expect(result.join(' ')).not.toContain(
+      'Улитки: регионы уже посчитаны в начале хода',
+    )
+    expect(result).toContain(
+      'Дварфы: +1 монета за каждую занятую шахту, в том числе в упадке.',
+    )
+  })
+
   test.each([
     [
       { race: 'khans', power: 'flying' } as Combo,

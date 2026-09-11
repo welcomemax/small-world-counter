@@ -157,9 +157,9 @@ export const RACES: CatalogEntry<RaceId>[] = [
   {
     id: 'wendigos',
     source: 'skyIslands',
-    nameRu: 'Вендтиго',
+    nameRu: 'Вендиго',
     nameEn: 'Wendigos',
-    hint: 'Соседние регионы сжигаются при завоеваниях Вендтиго.',
+    hint: 'Соседние регионы сжигаются при завоеваниях Вендиго.',
   },
   {
     id: 'drakons',

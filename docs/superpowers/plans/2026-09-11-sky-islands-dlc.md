@@ -41,7 +41,7 @@ Expected: FAIL because Sky Islands ids and `catalogFor` do not exist.
 
 - [ ] **Step 3: Add expansion metadata and entries**
 
-Add `source: 'base' | 'skyIslands'` to catalog entries, the approved names/hints/scoring metadata, and filtered catalog helpers. Keep full id arrays as the union of known tiles.
+Add `source: 'base' | 'skyIslands'` to catalog entries, the approved names/hints/scoring metadata (including the official «Вендиго» heading), and filtered catalog helpers. Keep full id arrays as the union of known tiles.
 
 - [ ] **Step 4: Verify the catalog tests pass**
 

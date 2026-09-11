@@ -84,12 +84,14 @@ export function SetupScreen() {
   }
 
   const randomizeCombo = (index: number) => {
-    const used = market.slots.flatMap((slot, slotIndex) =>
-      slot.combo && slotIndex !== index ? [slot.combo] : [],
-    )
-    const combo = randomFreeCombo(takenIds(used), expansions)
-    if (!combo) return
-    setMarket(setSlotCombo(market, index, combo))
+    setMarket((current) => {
+      const used = current.slots.flatMap((slot, slotIndex) =>
+        slot.combo && slotIndex !== index ? [slot.combo] : [],
+      )
+      const combo = randomFreeCombo(takenIds(used), expansions)
+      if (!combo) return current
+      return setSlotCombo(current, index, combo)
+    })
     soundEngine.play('deal')
     setRandomizedIndex(null)
     timers.current.push(

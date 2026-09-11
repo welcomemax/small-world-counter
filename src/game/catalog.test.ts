@@ -50,7 +50,7 @@ const TILE_POWERS: Record<string, string> = {
 }
 
 const SKY_ISLANDS_RACES: Record<string, string> = {
-  wendigos: 'Вендтиго',
+  wendigos: 'Вендиго',
   drakons: 'Драконы',
   scavengers: 'Падальщики',
   scarecrows: 'Пугала',

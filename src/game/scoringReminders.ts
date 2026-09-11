@@ -51,6 +51,7 @@ function ownExpansionReminders(
   if (
     action === 'select' &&
     player.awaitingSelect &&
+    // game.nextDeclined appends the newest declined combo last.
     player.declined.at(-1)?.power === 'racketeering'
   ) {
     return [RACKETEERING_REMINDER]
@@ -115,7 +116,9 @@ export function scoringRemindersForTurn({
       ? declined.filter((combo) => isSpiritPower(combo.power))
       : declined
   const retained = retainedDeclined.flatMap((combo) =>
-    remindersForCombo(combo, ['decline'], ['decline'], expansions),
+    combo.race === 'escargots'
+      ? []
+      : remindersForCombo(combo, ['decline'], ['decline'], expansions),
   )
   const expansionReminders = expansions.skyIslands
     ? [

@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterEach, describe, expect, test } from 'vitest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { emptyMarket, setSlotCoins, setSlotCombo } from '../game/market'
 import { filterMarketForExpansions } from '../game/setupPreferences'
-import { GameProvider } from '../state/GameContext'
+import {
+  GameContext,
+  GameProvider,
+  type GameContextValue,
+} from '../state/GameContext'
 import { ComboPicker } from './ComboPicker'
 import { DiscreteSlider } from './DiscreteSlider'
 import { MarketColumn } from './MarketColumn'
@@ -17,7 +21,32 @@ import { ToggleSwitch } from './ToggleSwitch'
 afterEach(() => {
   cleanup()
   localStorage.clear()
+  vi.restoreAllMocks()
 })
+
+function renderSetup(startGame = vi.fn()) {
+  const value: GameContextValue = {
+    game: null,
+    screen: 'setup',
+    handover: null,
+    startGame,
+    recordTurn: vi.fn(),
+    undoTurn: vi.fn(),
+    setMarketCombo: vi.fn(),
+    setMarketCoins: vi.fn(),
+    toggleHidden: vi.fn(),
+    goAnalytics: vi.fn(),
+    goLive: vi.fn(),
+    newGame: vi.fn(),
+    dismissHandover: vi.fn(),
+  }
+  render(
+    <GameContext.Provider value={value}>
+      <SetupScreen />
+    </GameContext.Provider>,
+  )
+  return startGame
+}
 
 describe('DiscreteSlider', () => {
   test('renders an accessible native range with its current value and marks', () => {
@@ -172,10 +201,54 @@ describe('Sky Islands setup toggle', () => {
 
     fireEvent.click(screen.getByRole('checkbox', { name: /Небесные острова/ }))
 
-    expect(screen.getAllByText('пусто — впишите связку')[0]).toBeTruthy()
+    expect(screen.queryByText(/Золотоносные Амазонки/)).toBeNull()
+    expect(screen.getAllByText('пусто — впишите связку')).toHaveLength(6)
     expect(localStorage.getItem('small-world-counter.setup.expansions.v1')).toBe(
       '{"skyIslands":false}',
     )
+  })
+
+  test('submits the enabled Sky Islands expansion in a valid setup', () => {
+    const startGame = renderSetup()
+
+    fireEvent.change(screen.getByLabelText('Имя игрока 1'), {
+      target: { value: 'Анна' },
+    })
+    fireEvent.change(screen.getByLabelText('Имя игрока 2'), {
+      target: { value: 'Борис' },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: /Небесные острова/ }))
+    for (let index = 1; index <= 6; index += 1) {
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: `Случайная связка для строки ${index}`,
+        }),
+      )
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: /Играть/ }))
+
+    expect(startGame).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expansions: { skyIslands: true },
+      }),
+    )
+    expect(startGame).toHaveBeenCalledTimes(1)
+  })
+
+  test('keeps rapid randomizations in separate rows', () => {
+    renderSetup()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const randomizers = screen.getAllByRole('button', {
+      name: /Случайная связка для строки/,
+    })
+
+    act(() => {
+      randomizers[0]!.click()
+      randomizers[1]!.click()
+    })
+
+    expect(screen.getByText('2 / 6')).toBeTruthy()
   })
 
   test('resets both combo and coins for every disabled DLC row', () => {
