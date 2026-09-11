@@ -5,6 +5,7 @@ import {
   catalogFor,
   formatCombo,
   isSkyIslandsCombo,
+  raceById,
 } from './catalog'
 
 /** Names printed on the Hobby World / Days of Wonder Russian tiles. */
@@ -133,6 +134,17 @@ describe('catalogFor', () => {
     const catalog = catalogFor({})
     expect(catalog.races).toHaveLength(14)
     expect(catalog.powers).toHaveLength(20)
+  })
+})
+
+describe('Escargots scoring metadata', () => {
+  test('first-active reminder includes the approved power-coin clause', () => {
+    const firstActive = raceById('escargots').scoring?.find(
+      (entry) => entry.when === 'firstActive',
+    )
+    expect(firstActive?.text).toBe(
+      'Улитки: регионы в этот ход не дают монет; со следующего хода — в начале хода, не в конце. Монеты силы — по-прежнему в конце хода.',
+    )
   })
 })
 
