@@ -28,6 +28,37 @@ const open = () =>
 
 const settle = () => act(() => vi.runAllTimers())
 
+function dispatchTouches(
+  type: 'touchstart' | 'touchmove' | 'touchend',
+  touches: { clientX: number; clientY: number }[],
+) {
+  const event = new Event(type, { bubbles: true, cancelable: true })
+  Object.defineProperty(event, 'touches', { value: touches })
+  window.dispatchEvent(event)
+}
+
+function wheelStep(deltaX: number, deltaY: number) {
+  const event = new WheelEvent('wheel', {
+    deltaX,
+    deltaY,
+    bubbles: true,
+    cancelable: true,
+  })
+  window.dispatchEvent(event)
+  return event
+}
+
+function swipeTwoFingersHorizontally() {
+  dispatchTouches('touchstart', [
+    { clientX: 80, clientY: 240 },
+    { clientX: 120, clientY: 248 },
+  ])
+  dispatchTouches('touchmove', [
+    { clientX: 180, clientY: 242 },
+    { clientX: 220, clientY: 250 },
+  ])
+}
+
 beforeEach(() => {
   vi.useFakeTimers()
   prefersReducedMotion(false)
@@ -121,5 +152,73 @@ describe('ReinforcementDie', () => {
     open()
 
     expect(screen.getByText('+3 к завоеванию')).toBeTruthy()
+  })
+
+  test('opens on a two-finger horizontal swipe', () => {
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    act(() => {
+      vi.runAllTimers()
+    })
+    act(() => {
+      swipeTwoFingersHorizontally()
+    })
+    expect(screen.getByRole('dialog', { name: 'Кубик подкрепления' })).toBeTruthy()
+  })
+
+  test('opens on a trackpad swipe and keeps the page from scrolling sideways', () => {
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    const steps: WheelEvent[] = []
+    act(() => {
+      for (let step = 0; step < 4; step += 1) steps.push(wheelStep(40, 2))
+    })
+
+    expect(steps.at(-1)?.defaultPrevented).toBe(true)
+    expect(screen.getByRole('dialog', { name: 'Кубик подкрепления' })).toBeTruthy()
+  })
+
+  test('lets a vertical wheel scroll the page as usual', () => {
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    const steps: WheelEvent[] = []
+    act(() => {
+      for (let step = 0; step < 6; step += 1) steps.push(wheelStep(3, 90))
+    })
+
+    expect(steps.at(-1)?.defaultPrevented).toBe(false)
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  test('ignores a pinch zoom', () => {
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    act(() => {
+      for (let step = 0; step < 4; step += 1) {
+        window.dispatchEvent(
+          new WheelEvent('wheel', {
+            deltaX: 40,
+            ctrlKey: true,
+            bubbles: true,
+            cancelable: true,
+          }),
+        )
+      }
+    })
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  test('ignores a one-finger drag', () => {
+    roll.mockReturnValue(1)
+    render(<ReinforcementDie />)
+    act(() => {
+      vi.runAllTimers()
+    })
+    act(() => {
+      dispatchTouches('touchstart', [{ clientX: 80, clientY: 240 }])
+      dispatchTouches('touchmove', [{ clientX: 220, clientY: 240 }])
+    })
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

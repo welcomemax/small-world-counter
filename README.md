@@ -1,16 +1,7 @@
-# Счётчик Small World
+# Small World score tracker
 
-Веб-приложение для живого учёта очков базовой коробки [Small World](https://www.daysofwonder.com/game/small-world/) и разбора партии в конце.
+A table companion for the [Small World](https://www.daysofwonder.com/game/small-world/) base game. Keep coins as you play, then look back at the match with charts and a short recap.
 
-```bash
-npm install
-npm run dev
-```
+Play it here: [welcomemax.github.io/small-world-counter](https://welcomemax.github.io/small-world-counter/).
 
-Тесты: `npm test`. Сборка: `npm run build`.
-
-Во время партии вводите очки, упадок и новые связки раса+сила. Итоги по умолчанию скрыты. После последнего хода — графики и текстовый разбор. Карта и LLM заложены в данные, но не подключены.
-
-## Шрифты
-
-Локальные файлы Unbounded лежат в `public/fonts`, подключение — в `src/index.css`. Кириллица и латиница идут отдельными подмножествами с `unicode-range`. Шрифт под лицензией OFL.
+Small World is © Days of Wonder. This is an unofficial fan tool.

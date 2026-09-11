@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  base: '/small-world-counter/',
   plugins: [react()],
   // Filesystem events are unreliable in this sandbox, so watch by polling.
   server: {

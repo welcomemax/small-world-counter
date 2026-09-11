@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Unbounded';
-  src: url('/fonts/Unbounded-cyrillic.woff2') format('woff2');
+  src: url('/small-world-counter/fonts/Unbounded-cyrillic.woff2') format('woff2');
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: 'Unbounded';
-  src: url('/fonts/Unbounded-cyrillic-ext.woff2') format('woff2');
+  src: url('/small-world-counter/fonts/Unbounded-cyrillic-ext.woff2') format('woff2');
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -19,7 +19,7 @@
 
 @font-face {
   font-family: 'Unbounded';
-  src: url('/fonts/Unbounded-latin.woff2') format('woff2');
+  src: url('/small-world-counter/fonts/Unbounded-latin.woff2') format('woff2');
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -30,7 +30,7 @@
 
 @font-face {
   font-family: 'Unbounded';
-  src: url('/fonts/Unbounded-latin-ext.woff2') format('woff2');
+  src: url('/small-world-counter/fonts/Unbounded-latin-ext.woff2') format('woff2');
   font-weight: 300 700;
   font-style: normal;
   font-display: swap;
@@ -58,6 +58,10 @@
   background: #e7d3b0;
   font: 17px/140% var(--sans);
   color-scheme: light;
+
+  /* A sideways two-finger swipe rolls the die, so keep the browser's
+     back-navigation gesture out of it. */
+  overscroll-behavior-x: none;
 }
 
 * {

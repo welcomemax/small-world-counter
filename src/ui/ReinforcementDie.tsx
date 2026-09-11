@@ -7,6 +7,7 @@ import {
 import { cueForDieFace, soundEngine } from '../audio/engine'
 import styles from './ReinforcementDie.module.css'
 import { Button } from './Button'
+import { useTwoFingerHorizontalSwipe } from './useTwoFingerHorizontalSwipe'
 
 const TUMBLE_STEPS = 6
 const TUMBLE_STEP_MS = 110
@@ -80,6 +81,13 @@ export function ReinforcementDie() {
     setFace(null)
   }, [clearTimers])
 
+  const openAndRoll = useCallback(() => {
+    setOpen(true)
+    roll()
+  }, [roll])
+
+  useTwoFingerHorizontalSwipe(openAndRoll, !open)
+
   useEffect(() => clearTimers, [clearTimers])
 
   useEffect(() => {
@@ -110,11 +118,8 @@ export function ReinforcementDie() {
         type="button"
         className={styles.trigger}
         aria-label="Бросить кубик подкрепления"
-        title="Бросить кубик подкрепления"
-        onClick={() => {
-          setOpen(true)
-          roll()
-        }}
+        title="Бросить кубик подкрепления · свайп двумя пальцами вбок"
+        onClick={openAndRoll}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Z" />
@@ -142,6 +147,7 @@ export function ReinforcementDie() {
             <h2 id={titleId}>Кубик подкрепления</h2>
             <p className={styles.hint}>
               Три грани пустые, остальные — 1, 2 и 3. Бросок нигде не сохраняется.
+              За столом можно открыть кубик свайпом двумя пальцами вбок.
             </p>
 
             <div className={styles.die} data-rolling={rolling} aria-hidden="true">
