@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { POWERS, RACES, formatCombo } from './catalog'
+import {
+  POWERS,
+  RACES,
+  catalogFor,
+  formatCombo,
+  isSkyIslandsCombo,
+} from './catalog'
 
 /** Names printed on the Hobby World / Days of Wonder Russian tiles. */
 const TILE_RACES: Record<string, string> = {
@@ -42,22 +48,110 @@ const TILE_POWERS: Record<string, string> = {
   wealthy: 'Богатые',
 }
 
+const SKY_ISLANDS_RACES: Record<string, string> = {
+  wendigos: 'Вендтиго',
+  drakons: 'Драконы',
+  scavengers: 'Падальщики',
+  scarecrows: 'Пугала',
+  escargots: 'Улитки',
+  khans: 'Ханы',
+  stormGiants: 'Штормовые великаны',
+}
+
+const SKY_ISLANDS_POWERS: Record<string, string> = {
+  airborne: 'Воздушные',
+  racketeering: 'Вымогатели',
+  zeppelined: 'Дирижабельные',
+  goldsmith: 'Золотоносные',
+  exploring: 'Ищущие',
+  gunner: 'Стрелковые',
+  haggling: 'Торговые',
+}
+
 describe('official Russian tile names', () => {
-  test('races match the printed banners', () => {
-    expect(Object.fromEntries(RACES.map((r) => [r.id, r.nameRu]))).toEqual(
-      TILE_RACES,
-    )
+  test('base races match the printed banners', () => {
+    expect(
+      Object.fromEntries(
+        RACES.filter((r) => r.source === 'base').map((r) => [r.id, r.nameRu]),
+      ),
+    ).toEqual(TILE_RACES)
   })
 
-  test('powers match the printed badges', () => {
-    expect(Object.fromEntries(POWERS.map((p) => [p.id, p.nameRu]))).toEqual(
-      TILE_POWERS,
-    )
+  test('base powers match the printed badges', () => {
+    expect(
+      Object.fromEntries(
+        POWERS.filter((p) => p.source === 'base').map((p) => [p.id, p.nameRu]),
+      ),
+    ).toEqual(TILE_POWERS)
+  })
+
+  test('Sky Islands races match the printed banners', () => {
+    expect(
+      Object.fromEntries(
+        RACES.filter((r) => r.source === 'skyIslands').map((r) => [
+          r.id,
+          r.nameRu,
+        ]),
+      ),
+    ).toEqual(SKY_ISLANDS_RACES)
+  })
+
+  test('Sky Islands powers match the printed badges', () => {
+    expect(
+      Object.fromEntries(
+        POWERS.filter((p) => p.source === 'skyIslands').map((p) => [
+          p.id,
+          p.nameRu,
+        ]),
+      ),
+    ).toEqual(SKY_ISLANDS_POWERS)
   })
 
   test('combos read as on the table: power then race', () => {
     expect(formatCombo('trolls', 'dragonMaster')).toContain(
       'Драконо-властные Тролли',
     )
+  })
+})
+
+describe('catalogFor', () => {
+  test('base-only games expose 14 races and 20 powers', () => {
+    const catalog = catalogFor({ skyIslands: false })
+    expect(catalog.races).toHaveLength(14)
+    expect(catalog.powers).toHaveLength(20)
+    expect(catalog.races.every((r) => r.source === 'base')).toBe(true)
+    expect(catalog.powers.every((p) => p.source === 'base')).toBe(true)
+  })
+
+  test('Sky Islands games expose 21 races and 27 powers', () => {
+    const catalog = catalogFor({ skyIslands: true })
+    expect(catalog.races).toHaveLength(21)
+    expect(catalog.powers).toHaveLength(27)
+  })
+
+  test('missing skyIslands flag defaults to base-only', () => {
+    const catalog = catalogFor({})
+    expect(catalog.races).toHaveLength(14)
+    expect(catalog.powers).toHaveLength(20)
+  })
+})
+
+describe('isSkyIslandsCombo', () => {
+  test('detects DLC race or power', () => {
+    expect(
+      isSkyIslandsCombo({ race: 'khans', power: 'flying' }),
+    ).toBe(true)
+    expect(
+      isSkyIslandsCombo({ race: 'elves', power: 'goldsmith' }),
+    ).toBe(true)
+    expect(
+      isSkyIslandsCombo({ race: 'khans', power: 'goldsmith' }),
+    ).toBe(true)
+  })
+
+  test('returns false for base-only combos', () => {
+    expect(
+      isSkyIslandsCombo({ race: 'elves', power: 'flying' }),
+    ).toBe(false)
   })
 })
