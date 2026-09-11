@@ -84,6 +84,17 @@ describe('storage', () => {
       },
     },
     {
+      source: 'market history',
+      update: (stored: ReturnType<typeof startedGame>) => {
+        stored.marketHistory = [
+          setSlotCombo(emptyMarket(), 0, {
+            race: 'drakons',
+            power: 'merchant',
+          }),
+        ]
+      },
+    },
+    {
       source: 'history',
       update: (stored: ReturnType<typeof startedGame>) => {
         stored.history.push({

@@ -124,6 +124,11 @@ function storedCombos(game: Partial<Game>): Combo[] {
   const market = Array.isArray(game.market?.slots)
     ? game.market.slots.flatMap((slot) => (slot.combo ? [slot.combo] : []))
     : []
+  const marketHistory = Array.isArray(game.marketHistory)
+    ? game.marketHistory.flatMap((snapshot) =>
+        snapshot.slots.flatMap((slot) => (slot.combo ? [slot.combo] : [])),
+      )
+    : []
   const history = Array.isArray(game.history)
     ? game.history.flatMap((turn) => (turn.newCombo ? [turn.newCombo] : []))
     : []
@@ -133,7 +138,7 @@ function storedCombos(game: Partial<Game>): Combo[] {
         ...(Array.isArray(player.declined) ? player.declined : []),
       ])
     : []
-  return [...market, ...history, ...players]
+  return [...market, ...marketHistory, ...history, ...players]
 }
 
 function storedExpansions(game: Partial<Game>): Expansions {
