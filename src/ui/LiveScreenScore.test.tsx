@@ -20,7 +20,7 @@ const COLUMN: Combo[] = [
   { race: 'giants', power: 'mounted' },
 ]
 
-function startedGame() {
+function startedGame(skyIslands = false) {
   const market = COLUMN.reduce(
     (current, combo, index) => setSlotCombo(current, index, combo),
     emptyMarket(),
@@ -30,6 +30,7 @@ function startedGame() {
     turnCount: 3,
     firstPlayerIndex: 0,
     market,
+    expansions: { skyIslands },
   })
   game = applyTurn(game, {
     action: 'select',
@@ -148,5 +149,67 @@ describe('LiveScreen combo pick after decline', () => {
       marketIndex: 2,
       score: { total: 0, activeRegions: 0, declineRegions: 0, bonus: 0 },
     })
+  })
+})
+
+describe('LiveScreen Sky Islands wiring', () => {
+  test('shows the island-control reminder in an enabled live game', () => {
+    renderLive(vi.fn(), startedGame(true))
+
+    expect(
+      screen.getByText(
+        'Небесные острова: +1 за каждый остров, целиком занятый одной вашей расой (активной или в упадке). Озеро занимать не обязательно.',
+      ),
+    ).toBeTruthy()
+  })
+
+  test('lets a live editor choose Sky Islands tiles when enabled', () => {
+    renderLive(vi.fn(), startedGame(true))
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Править связку' })[5]!,
+    )
+
+    expect(screen.getByRole('option', { name: 'Ханы (Khans)' })).toBeTruthy()
+    expect(
+      screen.getByRole('option', { name: 'Золотоносные (Goldsmith)' }),
+    ).toBeTruthy()
+  })
+
+  test('uses the enabled expansion pool for live replacements', () => {
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.999)
+    const game = startedGame(true)
+    const setMarketCombo = vi.fn()
+    const value: GameContextValue = {
+      game,
+      screen: 'live',
+      handover: null,
+      startGame: vi.fn(),
+      recordTurn: vi.fn(),
+      undoTurn: vi.fn(),
+      setMarketCombo,
+      setMarketCoins: vi.fn(),
+      toggleHidden: vi.fn(),
+      goAnalytics: vi.fn(),
+      goLive: vi.fn(),
+      newGame: vi.fn(),
+      dismissHandover: vi.fn(),
+    }
+    render(
+      <GameContext.Provider value={value}>
+        <LiveScreen />
+      </GameContext.Provider>,
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Случайная связка для строки 6',
+      }),
+    )
+
+    expect(setMarketCombo).toHaveBeenCalledWith(5, {
+      race: 'stormGiants',
+      power: 'haggling',
+    })
+    random.mockRestore()
   })
 })

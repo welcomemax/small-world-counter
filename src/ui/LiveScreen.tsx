@@ -74,6 +74,9 @@ export function LiveScreen() {
     action: activeAction,
     activeCombo: scoringCombo,
     declined: player.declined,
+    expansions: game.expansions,
+    player,
+    rivals,
   })
 
   const submit = () => {
@@ -97,7 +100,12 @@ export function LiveScreen() {
   }
 
   const randomizeDraft = (index: number) => {
-    const combo = randomReplacementCombo(game.market, usedCombos, index)
+    const combo = randomReplacementCombo(
+      game.market,
+      usedCombos,
+      index,
+      game.expansions,
+    )
     if (!combo) return
     soundEngine.play('deal')
     setMarketCombo(index, combo)
@@ -245,6 +253,7 @@ export function LiveScreen() {
             onRandomize={randomizeDraft}
             randomizedIndex={randomizedIndex}
             randomizeEmptyOnly
+            expansions={game.expansions}
           />
           {!isMarketReady(game.market) && (
             <p className={styles.warn}>
