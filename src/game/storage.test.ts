@@ -12,6 +12,7 @@ import { clearSavedGame, loadGame, saveGame } from './storage'
 import type { Combo } from './types'
 
 const memory = new Map<string, string>()
+const GAME_KEY = 'small-world-counter.game.v3'
 
 Object.defineProperty(globalThis, 'localStorage', {
   value: {
@@ -53,6 +54,79 @@ function startedGame() {
 }
 
 describe('storage', () => {
+  test('round-trips explicit expansion metadata', () => {
+    saveGame(
+      createGame({
+        players: [{ name: 'Анна' }, { name: 'Борис' }],
+        expansions: { skyIslands: true },
+      }),
+    )
+
+    expect(loadGame()!.expansions).toEqual({ skyIslands: true })
+  })
+
+  test('hydrates a legacy base-game save with expansions disabled', () => {
+    const legacy = startedGame() as Partial<ReturnType<typeof startedGame>>
+    delete legacy.expansions
+    memory.set(GAME_KEY, JSON.stringify(legacy))
+
+    expect(loadGame()!.expansions).toEqual({ skyIslands: false })
+  })
+
+  test.each([
+    {
+      source: 'market',
+      update: (stored: ReturnType<typeof startedGame>) => {
+        stored.market.slots[0]!.combo = {
+          race: 'wendigos',
+          power: 'merchant',
+        }
+      },
+    },
+    {
+      source: 'history',
+      update: (stored: ReturnType<typeof startedGame>) => {
+        stored.history.push({
+          action: 'select',
+          score: { total: 0 },
+          newCombo: { race: 'humans', power: 'airborne' },
+          playerId: 'p0',
+          round: 1,
+          mapSnapshot: null,
+        })
+      },
+    },
+    {
+      source: 'active player',
+      update: (stored: ReturnType<typeof startedGame>) => {
+        stored.players[0]!.activeCombo = {
+          race: 'drakons',
+          power: 'merchant',
+        }
+      },
+    },
+    {
+      source: 'declined player',
+      update: (stored: ReturnType<typeof startedGame>) => {
+        stored.players[0]!.declined = [
+          { race: 'humans', power: 'goldsmith' },
+        ]
+      },
+    },
+  ])('infers Sky Islands from a legacy $source combo', ({ update }) => {
+    const legacy = startedGame() as Partial<ReturnType<typeof startedGame>>
+    delete legacy.expansions
+    update(legacy as ReturnType<typeof startedGame>)
+    memory.set(GAME_KEY, JSON.stringify(legacy))
+
+    const loaded = loadGame()!
+    expect(loaded.expansions).toEqual({ skyIslands: true })
+    if (loaded.history.length === 0) {
+      expect(loaded.players[0]!.activeCombo).toBeNull()
+      expect(loaded.players[0]!.declined).toEqual([])
+    }
+  })
+
   test('rehydrates a finished two-player game', () => {
     let game = startedGame()
     game = applyTurn(game, { action: 'select', marketIndex: 0, score: { total: 4 } })

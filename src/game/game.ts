@@ -1,4 +1,9 @@
-import { isSpiritPower } from './catalog'
+import {
+  DEFAULT_EXPANSIONS,
+  isSkyIslandsCombo,
+  isSpiritPower,
+  type Expansions,
+} from './catalog'
 import {
   MARKET_SIZE,
   emptyMarket,
@@ -115,6 +120,31 @@ function withPlayers(
   }
 }
 
+function storedCombos(game: Partial<Game>): Combo[] {
+  const market = Array.isArray(game.market?.slots)
+    ? game.market.slots.flatMap((slot) => (slot.combo ? [slot.combo] : []))
+    : []
+  const history = Array.isArray(game.history)
+    ? game.history.flatMap((turn) => (turn.newCombo ? [turn.newCombo] : []))
+    : []
+  const players = Array.isArray(game.players)
+    ? game.players.flatMap((player) => [
+        ...(player.activeCombo ? [player.activeCombo] : []),
+        ...(Array.isArray(player.declined) ? player.declined : []),
+      ])
+    : []
+  return [...market, ...history, ...players]
+}
+
+function storedExpansions(game: Partial<Game>): Expansions {
+  if (game.expansions) {
+    return { skyIslands: game.expansions.skyIslands ?? false }
+  }
+  return {
+    skyIslands: storedCombos(game).some(isSkyIslandsCombo),
+  }
+}
+
 export function createGame(input: CreateGameInput): Game {
   if (input.players.length < 2 || input.players.length > 5) {
     throw new Error('Small World is for 2–5 players')
@@ -127,6 +157,7 @@ export function createGame(input: CreateGameInput): Game {
     setup: input.players.map((p) => ({ name: p.name })),
     turnCount: input.turnCount ?? defaultTurnCount(input.players.length),
     scoreHidden: input.scoreHidden ?? true,
+    expansions: input.expansions ?? { ...DEFAULT_EXPANSIONS },
     history: [],
     firstPlayerIndex,
     market: input.market ?? emptyMarket(),
@@ -144,6 +175,7 @@ export function hydrateGame(stored: unknown): Game | null {
     setup: game.setup.map((p) => ({ name: p.name })),
     turnCount: game.turnCount,
     scoreHidden: game.scoreHidden,
+    expansions: storedExpansions(game),
     history: game.history,
     firstPlayerIndex: game.firstPlayerIndex ?? 0,
     market: game.market,

@@ -1,4 +1,15 @@
-export type { Combo, ComboCoins, CreateGameInput, Game, PlayerState, PlayerTurn, TurnInput, TurnScore } from './types'
+export type {
+  Combo,
+  ComboCoins,
+  CreateGameInput,
+  Game,
+  PlayerState,
+  PlayerTurn,
+  TurnInput,
+  TurnScore,
+} from './types'
+export type { Expansions } from './catalog'
+export { DEFAULT_EXPANSIONS } from './catalog'
 export {
   applyTurn,
   createGame,

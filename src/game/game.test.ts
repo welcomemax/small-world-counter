@@ -72,6 +72,13 @@ describe('defaultTurnCount', () => {
 })
 
 describe('createGame', () => {
+  test('persists the selected expansions and defaults to the base game', () => {
+    expect(twoPlayerGame().expansions).toEqual({ skyIslands: false })
+    expect(
+      twoPlayerGame({ expansions: { skyIslands: true } }).expansions,
+    ).toEqual({ skyIslands: true })
+  })
+
   test('starts with 5 coins, no races, and the column entered from the table', () => {
     const game = twoPlayerGame()
     expect(playerTotal(game, game.players[0]!.id)).toBe(5)

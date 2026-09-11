@@ -1,4 +1,4 @@
-import type { PowerId, RaceId } from './catalog'
+import type { Expansions, PowerId, RaceId } from './catalog'
 import type { ComboMarket } from './market'
 
 export const STARTING_COINS = 5
@@ -53,6 +53,7 @@ export type CreateGameInput = {
   scoreHidden?: boolean
   firstPlayerIndex?: number
   market?: ComboMarket
+  expansions?: Expansions
 }
 
 export type PlayerState = {
@@ -68,6 +69,7 @@ export type Game = {
   players: PlayerState[]
   turnCount: number
   scoreHidden: boolean
+  expansions: Expansions
   setup: PlayerSetup[]
   history: PlayerTurn[]
   firstPlayerIndex: number

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { RACE_IDS } from './catalog'
+import { catalogFor, RACE_IDS } from './catalog'
 import { applyTurn, createGame } from './game'
 import { emptyMarket, setSlotCombo } from './market'
 import {
@@ -110,6 +110,20 @@ describe('firstFreeCombo', () => {
       firstFreeCombo({ races: new Set(RACE_IDS), powers: new Set() }),
     ).toBeNull()
   })
+
+  test('uses only base-game ids unless Sky Islands is enabled', () => {
+    const base = catalogFor({ skyIslands: false })
+    const taken = {
+      races: new Set(base.races.map(({ id }) => id)),
+      powers: new Set(base.powers.map(({ id }) => id)),
+    }
+
+    expect(firstFreeCombo(taken)).toBeNull()
+    expect(firstFreeCombo(taken, { skyIslands: true })).toEqual({
+      race: 'wendigos',
+      power: 'airborne',
+    })
+  })
 })
 
 describe('random free selection', () => {
@@ -118,17 +132,30 @@ describe('random free selection', () => {
       { race: 'amazons', power: 'alchemist' },
       { race: 'dwarves', power: 'berserk' },
     ])
-    expect(randomFreeCombo(taken, () => 0)).toEqual({
+    expect(randomFreeCombo(taken, { skyIslands: false }, () => 0)).toEqual({
       race: 'elves',
       power: 'bivouacking',
     })
   })
 
-  test('uses the injected random value deterministically', () => {
+  test('defaults deterministic selection to the base-game catalog', () => {
     const taken = takenIds([])
-    expect(randomFreeCombo(taken, () => 0.999)).toEqual({
+    expect(randomFreeCombo(taken, undefined, () => 0.999)).toEqual({
       race: 'wizards',
       power: 'wealthy',
+    })
+  })
+
+  test('can select Sky Islands ids when the expansion is enabled', () => {
+    expect(
+      randomFreeCombo(
+        takenIds([]),
+        { skyIslands: true },
+        () => 0.999,
+      ),
+    ).toEqual({
+      race: 'stormGiants',
+      power: 'haggling',
     })
   })
 
@@ -148,18 +175,45 @@ describe('random free selection', () => {
 describe('randomReplacementCombo', () => {
   test('excludes every other market row and combos used earlier', () => {
     const used: Combo[] = [{ race: 'amazons', power: 'alchemist' }]
-    expect(randomReplacementCombo(tableMarket(), used, 2, () => 0)).toEqual({
+    expect(
+      randomReplacementCombo(
+        tableMarket(),
+        used,
+        2,
+        { skyIslands: false },
+        () => 0,
+      ),
+    ).toEqual({
       race: 'elves',
       power: 'berserk',
     })
   })
 
   test('rejects an invalid row and an exhausted race stack', () => {
-    expect(randomReplacementCombo(tableMarket(), [], -1, () => 0)).toBeNull()
+    expect(
+      randomReplacementCombo(tableMarket(), [], -1, undefined, () => 0),
+    ).toBeNull()
     const allRaces: Combo[] = RACE_IDS.map((race) => ({
       race,
       power: 'alchemist',
     }))
-    expect(randomReplacementCombo(tableMarket(), allRaces, 2, () => 0)).toBeNull()
+    expect(
+      randomReplacementCombo(tableMarket(), allRaces, 2, undefined, () => 0),
+    ).toBeNull()
+  })
+
+  test('can replace a row with Sky Islands ids when enabled', () => {
+    expect(
+      randomReplacementCombo(
+        emptyMarket(),
+        [],
+        0,
+        { skyIslands: true },
+        () => 0.999,
+      ),
+    ).toEqual({
+      race: 'stormGiants',
+      power: 'haggling',
+    })
   })
 })

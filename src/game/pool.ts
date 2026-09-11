@@ -1,5 +1,5 @@
-import { POWER_IDS, RACE_IDS } from './catalog'
-import type { PowerId, RaceId } from './catalog'
+import { catalogFor, DEFAULT_EXPANSIONS } from './catalog'
+import type { Expansions, PowerId, RaceId } from './catalog'
 import type { ComboMarket } from './market'
 import type { Combo, Game } from './types'
 
@@ -39,9 +39,13 @@ export function takenIds(combos: Combo[]): TakenIds {
 }
 
 /** First race and power still in the stacks, or null once either one runs out. */
-export function firstFreeCombo(taken: TakenIds): Combo | null {
-  const race = RACE_IDS.find((id) => !taken.races.has(id))
-  const power = POWER_IDS.find((id) => !taken.powers.has(id))
+export function firstFreeCombo(
+  taken: TakenIds,
+  expansions: Expansions = DEFAULT_EXPANSIONS,
+): Combo | null {
+  const catalog = catalogFor(expansions)
+  const race = catalog.races.find(({ id }) => !taken.races.has(id))?.id
+  const power = catalog.powers.find(({ id }) => !taken.powers.has(id))?.id
   return race && power ? { race, power } : null
 }
 
@@ -52,10 +56,16 @@ export function randomIndex(length: number, rng: () => number = Math.random): nu
 
 export function randomFreeCombo(
   taken: TakenIds,
+  expansions: Expansions = DEFAULT_EXPANSIONS,
   rng: () => number = Math.random,
 ): Combo | null {
-  const races = RACE_IDS.filter((id) => !taken.races.has(id))
-  const powers = POWER_IDS.filter((id) => !taken.powers.has(id))
+  const catalog = catalogFor(expansions)
+  const races = catalog.races
+    .map(({ id }) => id)
+    .filter((id) => !taken.races.has(id))
+  const powers = catalog.powers
+    .map(({ id }) => id)
+    .filter((id) => !taken.powers.has(id))
   const raceIndex = randomIndex(races.length, rng)
   const powerIndex = randomIndex(powers.length, rng)
   if (raceIndex < 0 || powerIndex < 0) return null
@@ -66,11 +76,16 @@ export function randomReplacementCombo(
   market: ComboMarket,
   usedCombos: Combo[],
   index: number,
+  expansions: Expansions = DEFAULT_EXPANSIONS,
   rng: () => number = Math.random,
 ): Combo | null {
   if (index < 0 || index >= market.slots.length) return null
   const otherRows = market.slots.flatMap((slot, slotIndex) =>
     slot.combo && slotIndex !== index ? [slot.combo] : [],
   )
-  return randomFreeCombo(takenIds([...otherRows, ...usedCombos]), rng)
+  return randomFreeCombo(
+    takenIds([...otherRows, ...usedCombos]),
+    expansions,
+    rng,
+  )
 }
