@@ -75,3 +75,17 @@ Conventional commit: `fix: resolve final Sky Islands review findings` (the focus
 - Vite reports four existing unresolved-at-build-time Unbounded font URLs, which remain runtime-resolved.
 - npm reports the existing deprecated `devdir` environment configuration warning.
 - React Doctor could not reach its score API, but its local scan completed successfully.
+
+## Documentation drift follow-up
+
+- Clarified in the approved design spec that Escargots use action-specific reminder timing: their decline copy appears only on the turn they enter decline and is not retained later.
+- Added the corresponding code comment at the retained-combo filter, contrasting Escargots' one-turn timing with ongoing in-decline scoring such as Dwarves.
+- The implementation plan did not repeat the contradictory “same `when` rules as base” wording, so it required no change.
+
+Verification command:
+
+`npm test -- src/game/scoringReminders.test.ts`
+
+Result: exit 0; 1 file passed, 24 tests passed.
+
+Conventional follow-up commit: `docs: clarify Escargots decline reminder timing`.

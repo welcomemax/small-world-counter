@@ -115,6 +115,8 @@ export function scoringRemindersForTurn({
     action === 'decline'
       ? declined.filter((combo) => isSpiritPower(combo.power))
       : declined
+  // Escargots' special timing ends after their decline turn, unlike Dwarves'
+  // ongoing in-decline scoring.
   const retained = retainedDeclined.flatMap((combo) =>
     combo.race === 'escargots'
       ? []

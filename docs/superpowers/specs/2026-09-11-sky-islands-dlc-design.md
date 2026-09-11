@@ -71,11 +71,11 @@ Non-scoring table effects go in `hint` (Airborne first-turn cheaper conquests, Z
 
 `scoringRemindersForTurn` also receives `expansions` and the other players’ names + active combos.
 
-**Own combo (same `when` rules as base):**
+**Own combo (action-specific timing plus standard active reminders):**
 
 - Escargots, `select`: регионы в этот ход не дают монет; со следующего хода — в начале хода, не в конце. Монеты силы — по-прежнему в конце хода.
 - Escargots, `expand`: монеты за регионы Улиток уже в начале хода (не в конце).
-- Escargots, `decline`: регионы уже посчитаны в начале хода; в упадке регионы считаются ещё раз как обычно.
+- Escargots, `decline`: регионы уже посчитаны в начале хода; в упадке регионы считаются ещё раз как обычно. Show this only on the turn Escargots enter decline; do not retain it on later turns.
 - Khans, `active`: +1 за холм или пашню, −1 за любой другой регион (не ниже 0).
 - Goldsmith, `active`: +2 за шахту, −1 за любой другой регион (не ниже 0).
 - Exploring, `active`: бонус = меньшее из числа регионов на земле и на небесных островах.
