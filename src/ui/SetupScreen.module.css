@@ -1,5 +1,9 @@
+/* minmax(0, …) everywhere a column holds text or a button row: an `auto`
+   minimum would grow the column to its widest child and push the page
+   sideways on a phone. */
 .form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   min-height: 100svh;
   padding: var(--page-pad);
@@ -430,7 +434,7 @@
   }
 
   .workspace {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .marketCard {
@@ -477,11 +481,6 @@
 
   .play {
     min-width: 7.5rem;
-  }
-
-  .ready strong,
-  .notReady strong {
-    max-width: 44vw;
   }
 }
 

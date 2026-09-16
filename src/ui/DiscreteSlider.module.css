@@ -86,6 +86,10 @@
   appearance: none;
   background: transparent;
   cursor: pointer;
+
+  /* A finger that scrolls the page across a slider must not drag it: the
+     browser keeps vertical pans, so only sideways drags reach the thumb. */
+  touch-action: pan-y;
 }
 
 .range::-webkit-slider-runnable-track {

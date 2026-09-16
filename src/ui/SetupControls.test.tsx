@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { useState } from 'react'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, test, vi } from 'vitest'
@@ -48,6 +49,22 @@ function renderSetup(startGame = vi.fn()) {
   return startGame
 }
 
+/** The real screens own the value, so a revert has to survive a re-render. */
+function LiveSlider() {
+  const [value, setValue] = useState(3)
+  return (
+    <DiscreteSlider
+      id="regions"
+      label="Регионы"
+      value={value}
+      min={0}
+      max={20}
+      marks={[0, 10, 20]}
+      onChange={setValue}
+    />
+  )
+}
+
 describe('DiscreteSlider', () => {
   test('renders an accessible native range with its current value and marks', () => {
     const html = renderToStaticMarkup(
@@ -67,6 +84,30 @@ describe('DiscreteSlider', () => {
     expect(html).toContain('value="3"')
     expect(html).toContain('>Игроков<')
     expect(html).toContain('>5<')
+  })
+
+  test('puts the value back when a scroll takes the drag away', () => {
+    render(<LiveSlider />)
+    const range = screen.getByLabelText('Регионы')
+
+    fireEvent.pointerDown(range)
+    fireEvent.change(range, { target: { value: '11' } })
+    expect((range as HTMLInputElement).value).toBe('11')
+
+    fireEvent.pointerCancel(range)
+    expect((range as HTMLInputElement).value).toBe('3')
+  })
+
+  test('keeps a drag that the finger finished', () => {
+    render(<LiveSlider />)
+    const range = screen.getByLabelText('Регионы')
+
+    fireEvent.pointerDown(range)
+    fireEvent.change(range, { target: { value: '7' } })
+    fireEvent.pointerUp(range)
+    fireEvent.pointerCancel(range)
+
+    expect((range as HTMLInputElement).value).toBe('7')
   })
 })
 

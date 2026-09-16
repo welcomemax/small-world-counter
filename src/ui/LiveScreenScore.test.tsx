@@ -135,6 +135,22 @@ describe('LiveScreen combo pick after decline', () => {
     expect(recordTurn).not.toHaveBeenCalled()
   })
 
+  test('leads with the draft while a combo is still missing', () => {
+    renderLive(vi.fn(), awaitingSelectGame())
+
+    expect(screen.getByRole('main').parentElement!.className).toMatch(
+      /_draftFirst_/,
+    )
+  })
+
+  test('leads with the score fields on an ordinary turn', () => {
+    renderLive()
+
+    expect(screen.getByRole('main').parentElement!.className).not.toMatch(
+      /_draftFirst_/,
+    )
+  })
+
   test('records the row the player picked', () => {
     const recordTurn = renderLive(vi.fn(), awaitingSelectGame())
     fireEvent.click(screen.getAllByRole('button', { pressed: false })[2]!)

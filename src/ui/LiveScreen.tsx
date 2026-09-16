@@ -119,8 +119,13 @@ export function LiveScreen() {
     }, 0)
   }
 
+  /** Picking a combo comes before scoring, so on one column the draft leads. */
+  const layoutClass = player.awaitingSelect
+    ? `${styles.layout} ${styles.draftFirst}`
+    : styles.layout
+
   return (
-    <div className={styles.layout}>
+    <div className={layoutClass}>
       <ConfirmDialog
         open={confirmingNewGame}
         title="Начать новую партию?"
@@ -134,108 +139,115 @@ export function LiveScreen() {
         }}
       />
       <main className={styles.main}>
-        <header className={styles.top}>
-          <div>
-            <p className={styles.kicker}>
-              Ход {Math.min(actor.round, game.turnCount)} из {game.turnCount}
-            </p>
-            <h1>{player.name}</h1>
-          </div>
-          <div className={styles.headerActions}>
-            <ReinforcementDie />
-            <Button
-              size="compact"
-              onClick={() => setConfirmingNewGame(true)}
-            >
-              Новая партия
-            </Button>
-          </div>
-        </header>
+        <div className={styles.identity}>
+          <header className={styles.top}>
+            <div>
+              <p className={styles.kicker}>
+                Ход {Math.min(actor.round, game.turnCount)} из {game.turnCount}
+              </p>
+              <h1>{player.name}</h1>
+            </div>
+            <div className={styles.headerActions}>
+              <ReinforcementDie />
+              <Button
+                size="compact"
+                onClick={() => setConfirmingNewGame(true)}
+              >
+                Новая партия
+              </Button>
+            </div>
+          </header>
 
-        <section className={styles.status}>
-          <p>
-            <strong>Активная:</strong>{' '}
-            {player.activeCombo
-              ? formatCombo(player.activeCombo.race, player.activeCombo.power)
-              : 'нет — берём связку из колонки'}
-          </p>
-          <p>
-            <strong>В упадке:</strong>{' '}
-            {player.declined.length === 0
-              ? 'нет'
-              : player.declined
-                  .map((c) => formatCombo(c.race, c.power))
-                  .join('; ')}
-          </p>
-          {showTotals ? (
+          <section className={styles.status}>
             <p>
-              <strong>Монеты:</strong> {playerTotal(game, player.id)}
+              <strong>Активная:</strong>{' '}
+              {player.activeCombo
+                ? formatCombo(player.activeCombo.race, player.activeCombo.power)
+                : 'нет — берём связку из колонки'}
             </p>
-          ) : (
-            <p className={styles.muted}>Итоги скрыты до конца партии</p>
+            <p>
+              <strong>В упадке:</strong>{' '}
+              {player.declined.length === 0
+                ? 'нет'
+                : player.declined
+                    .map((c) => formatCombo(c.race, c.power))
+                    .join('; ')}
+            </p>
+            {showTotals ? (
+              <p>
+                <strong>Монеты:</strong> {playerTotal(game, player.id)}
+              </p>
+            ) : (
+              <p className={styles.muted}>Итоги скрыты до конца партии</p>
+            )}
+          </section>
+
+          {/* Stays with the header so the instruction precedes the draft. */}
+          {player.awaitingSelect && (
+            <p className={styles.banner}>
+              {player.declined.length === 0
+                ? 'Первый ход: возьмите связку из колонки драфта, завоюйте регионы за столом и впишите очки.'
+                : 'После упадка возьмите новую связку из колонки драфта, затем впишите очки за новую расу и регионы в упадке.'}
+            </p>
           )}
-        </section>
+        </div>
 
-        {player.awaitingSelect ? (
-          <p className={styles.banner}>
-            {player.declined.length === 0
-              ? 'Первый ход: возьмите связку из колонки в сайдбаре, завоюйте регионы за столом и впишите очки.'
-              : 'После упадка возьмите новую связку из колонки в сайдбаре, затем впишите очки за новую расу и регионы в упадке.'}
-          </p>
-        ) : (
-          <div className={styles.actions}>
-            <Button
-              variant={action === 'expand' ? 'selected' : 'secondary'}
-              onClick={() => setAction('expand')}
-            >
-              Расширение
-            </Button>
-            <Button
-              variant={action === 'decline' ? 'selected' : 'secondary'}
-              onClick={() => {
-                setAction('decline')
-                setScore((current) => ({ ...current, activeRegions: 0 }))
-              }}
-            >
-              Упадок
-            </Button>
-          </div>
-        )}
+        <div className={styles.turn}>
+          {!player.awaitingSelect && (
+            <div className={styles.actions}>
+              <Button
+                variant={action === 'expand' ? 'selected' : 'secondary'}
+                onClick={() => setAction('expand')}
+              >
+                Расширение
+              </Button>
+              <Button
+                variant={action === 'decline' ? 'selected' : 'secondary'}
+                onClick={() => {
+                  setAction('decline')
+                  setScore((current) => ({ ...current, activeRegions: 0 }))
+                }}
+              >
+                Упадок
+              </Button>
+            </div>
+          )}
 
-        {activeAction === 'decline' && (
-          <p className={styles.hint}>
-            В ход упадка нет завоеваний. Считайте регионы с перевёрнутыми
-            жетонами (без бонусов силы, кроме исключений вроде гномов).
-          </p>
-        )}
+          {activeAction === 'decline' && (
+            <p className={styles.hint}>
+              В ход упадка нет завоеваний. Считайте регионы с перевёрнутыми
+              жетонами (без бонусов силы, кроме исключений вроде гномов).
+            </p>
+          )}
 
-        <TurnScoreInput
-          action={activeAction}
-          value={score}
-          reminders={scoreReminders}
-          onChange={setScore}
-        />
+          <TurnScoreInput
+            action={activeAction}
+            value={score}
+            reminders={scoreReminders}
+            onChange={setScore}
+          />
 
-        {error ? <p className={styles.error}>{error}</p> : null}
+          {error ? <p className={styles.error}>{error}</p> : null}
 
-        {needsPick && (
-          <p className={styles.muted}>
-            Строка драфта не выбрана заранее — отметьте её в колонке.
-          </p>
-        )}
+          {needsPick && (
+            <p className={styles.muted}>
+              Строка драфта не выбрана заранее — отметьте её в колонке.
+            </p>
+          )}
 
-        <Button
-          variant="primary"
-          className={styles.submit}
-          disabled={needsPick}
-          onClick={submit}
-        >
-          {activeAction === 'select' ? 'Взять связку и записать ход' : 'Записать ход'}
-        </Button>
+          <Button
+            variant="primary"
+            className={styles.submit}
+            disabled={needsPick}
+            onClick={submit}
+          >
+            {activeAction === 'select' ? 'Взять связку и записать ход' : 'Записать ход'}
+          </Button>
+        </div>
       </main>
 
       <aside className={styles.sidebar}>
-        <section className={styles.panel}>
+        <section className={`${styles.panel} ${styles.draft}`}>
           <h2>Драфт</h2>
           <MarketColumn
             market={game.market}
@@ -262,7 +274,7 @@ export function LiveScreen() {
           )}
         </section>
 
-        <section className={styles.panel}>
+        <section className={`${styles.panel} ${styles.table}`}>
           <h2>За столом</h2>
           <ul className={styles.rivals}>
             {rivals.map((p) => (
@@ -283,7 +295,7 @@ export function LiveScreen() {
           </ul>
         </section>
 
-        <section className={styles.panel}>
+        <section className={`${styles.panel} ${styles.game}`}>
           <h2>Партия</h2>
           <div className={styles.toolbar}>
             <Button

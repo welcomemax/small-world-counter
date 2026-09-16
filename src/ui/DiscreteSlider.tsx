@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useRef, type CSSProperties } from 'react'
 import { parseDigits } from './parseNumber'
 import styles from './DiscreteSlider.module.css'
 
@@ -32,6 +32,17 @@ export function DiscreteSlider({
   const progress =
     effectiveMax === min ? 0 : ((value - min) / (effectiveMax - min)) * 100
   const sliderStyle = { '--progress': `${progress}%` } as CSSProperties
+
+  /* A range input jumps to wherever a finger lands, so a thumb that merely
+     brushes the track while scrolling rewrites the turn. The browser cancels
+     the pointer once it claims the gesture for a vertical pan, which is our
+     cue to put the value back. */
+  const valueBeforeDrag = useRef<number | null>(null)
+  const undoBrush = () => {
+    const before = valueBeforeDrag.current
+    valueBeforeDrag.current = null
+    if (before !== null && before !== value) onChange(before)
+  }
 
   return (
     <div className={styles.control}>
@@ -78,6 +89,13 @@ export function DiscreteSlider({
             disabled={disabled}
             style={sliderStyle}
             onChange={(event) => onChange(Number(event.target.value))}
+            onPointerDown={() => {
+              valueBeforeDrag.current = value
+            }}
+            onPointerUp={() => {
+              valueBeforeDrag.current = null
+            }}
+            onPointerCancel={undoBrush}
           />
           <span className={styles.marks} aria-hidden="true">
             {marks.map((mark) => (

@@ -3,7 +3,7 @@
   gap: 1rem;
   padding: var(--page-pad);
   text-align: left;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 @media (min-width: 860px) {
@@ -21,10 +21,50 @@
 }
 
 .main,
-.sidebar {
+.sidebar,
+.identity,
+.turn {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   align-content: start;
+}
+
+/* One column: the panels flatten into the page grid so the draft can be
+   ordered above the score fields on the turns that start with a pick. */
+@media (max-width: 859px) {
+  .main,
+  .sidebar {
+    display: contents;
+  }
+
+  .identity {
+    order: 1;
+  }
+
+  .turn {
+    order: 2;
+  }
+
+  .draft {
+    order: 3;
+  }
+
+  .table {
+    order: 4;
+  }
+
+  .game {
+    order: 5;
+  }
+
+  .draftFirst .draft {
+    order: 2;
+  }
+
+  .draftFirst .turn {
+    order: 3;
+  }
 }
 
 .top {
@@ -82,9 +122,10 @@
   color: var(--ink);
 }
 
+/* Side by side while both labels fit; stacked on the narrowest phones. */
 .actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
   gap: 0.6rem;
 }
 
